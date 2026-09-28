@@ -136,6 +136,8 @@ Chaque phase = une branche Git principale (voire plusieurs sous-branches) + une 
 - **Livrables :** repo GitHub, `README.md`, `.gitignore`, `pyproject.toml`, `uv.lock`, `.python-version`, `src/rubiks/__init__.py`, `CLAUDE.md`, `docs/cadrage.md`, `docs/cours/uv.md`.
 - **Terminé quand :** le repo est sur GitHub avec au moins 3 commits clairs, et après un `git clone` dans un autre dossier, `uv sync` puis `uv run python -c "import rubiks"` fonctionnent sans erreur.
 
+**Phase 0 terminée**
+
 ### Phase 1 — Le cube logique
 
 - **Objectif :** un cube qui tourne correctement, sans aucun affichage.

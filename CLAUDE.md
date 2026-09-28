@@ -52,4 +52,4 @@ uv add <paquet>                  # nouvelle dépendance (uv add --dev <outil> po
 
 ## Phase en cours
 
-Phase 0 — Mise en place (voir annexe B de `docs/cadrage.md`, à mettre à jour à chaque fin de phase).
+Phase 1
