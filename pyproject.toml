@@ -7,7 +7,9 @@ authors = [
     { name = "leonardgst", email = "goussetleonard@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "numpy>=2.5.3",
+]
 
 [project.scripts]
 rubiks = "rubiks:main"
