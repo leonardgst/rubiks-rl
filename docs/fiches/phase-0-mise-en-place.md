@@ -43,8 +43,9 @@ Les quatre éléments à retenir :
 Mini-exemple (hors projet) :
 
 ```python
-import math          # module de la bibliothèque standard
-print(math.sqrt(16)) # 4.0
+import math  # module de la bibliothèque standard
+
+print(math.sqrt(16))  # 4.0
 ```
 
 Dans notre projet, `uv` installe le paquet `rubiks` en mode « éditable » (cours `uv`, section 9). C'est pour ça que `import rubiks` fonctionnera partout, y compris dans les tests.
