@@ -21,3 +21,9 @@ dev = [
     "pytest>=9.1.1",
     "ruff>=0.16.9",
 ]
+
+  [tool.pytest.ini_options]
+  testpaths = ["tests"]          # pytest cherche les tests uniquement dans tests/
+
+  [tool.ruff.lint]
+  select = ["E", "F", "I"]       # E : style, F : erreurs probables, I : ordre des imports
