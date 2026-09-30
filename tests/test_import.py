@@ -32,6 +32,16 @@ def test_each_color_appears_nine_times():
     
 
 def test_quarter_turn_four_times_is_identity():
+    """
+    Vérifier si 4x le même mouvement correspond au cube d'origine
+    """
+    cube = Cube()
+    initial_state = cube.state.copy() # Créer une copie du cube d'origine
+    cube.apply()
+
+    assert np.array_equal(cube.state, initial_state)
+
+
 
 
 def test_move_then_inverse_is_identity():
