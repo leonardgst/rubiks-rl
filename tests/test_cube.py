@@ -119,3 +119,48 @@ def test_str_of_solved_cube():
         ]
     )
     assert str(Cube()) == expected
+
+
+def test_quarter_turn_U_from_solved_cube():
+    """Test de référence : on part d'un cube résolu (U=W ; F=G) et on fait 'U'
+    (quart de tour horaire, vu de dessus). Alors :
+        - la ligne du haut de F est rouge
+        - la ligne du haut de L est verte
+        - la ligne du haut de B est orange
+        - la ligne du haut de R est bleue
+    et tout le reste du cube est inchangé.
+    """
+    cube = Cube()
+    cube.move("U")
+
+    # Les 4 lignes du haut ont tourné d'une face à la suivante
+    assert (cube.state[1, 0] == 5).sum() == 3  # R : bleu
+    assert (cube.state[2, 0] == 1).sum() == 3  # F : rouge
+    assert (cube.state[4, 0] == 2).sum() == 3  # L : vert
+    assert (cube.state[5, 0] == 4).sum() == 3  # B : orange
+
+    # Ce qui ne doit pas bouger : le milieu et le bas des 4 faces, et toute la face D
+    assert np.all(cube.state[1, 1:] == 1)
+    assert np.all(cube.state[2, 1:] == 2)
+    assert np.all(cube.state[4, 1:] == 4)
+    assert np.all(cube.state[5, 1:] == 5)
+    assert np.all(cube.state[3] == 3)
+
+
+def test_U_turns_the_U_face_clockwise():
+    """Test de référence : après 'R', la colonne de droite de U est verte.
+    Après 'U' (quart de tour horaire, vu de dessus), cette bande verte est
+    devenue la ligne du bas de U, et le reste de U est blanc.
+    """
+    cube = Cube()
+    cube.move("R")
+    cube.move("U")
+
+    expected_face_U = np.array(
+        [
+            [0, 0, 0],
+            [0, 0, 0],
+            [2, 2, 2],
+        ]
+    )
+    assert np.array_equal(cube.state[0], expected_face_U)
