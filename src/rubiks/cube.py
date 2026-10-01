@@ -91,10 +91,17 @@ class Cube:
         return "\n".join(lines)
 
     def move(self, name: str) -> None:
-        """Applique un mouvement au cube, en le modifiant sur place (U seulement)."""
-        if name != "U":
+        """Applique un mouvement au cube, en le modifiant sur place (U, U', U2)."""
+        face, suffix = name[:1], name[1:]
+        quarter_turns = {"": 1, "2": 2, "'": 3}
+        if face != "U" or suffix not in quarter_turns:
             raise ValueError(f"mouvement non géré : {name!r}")
 
+        for _ in range(quarter_turns[suffix]):
+            self._quarter_turn_U()
+
+    def _quarter_turn_U(self) -> None:
+        """Quart de tour horaire de la face U, en modifiant le cube sur place."""
         # Copie de l'état de départ : on lit dedans, on écrit dans self
         old = self.copy()
 
@@ -106,4 +113,3 @@ class Cube:
         self.state[4, 0] = old.state[2, 0]  # L reçoit la ligne de F
         self.state[5, 0] = old.state[4, 0]  # B reçoit la ligne de L
         self.state[1, 0] = old.state[5, 0]  # R reçoit la ligne de B
-        # Le reste du cube (dont toute la face D) ne bouge pas
