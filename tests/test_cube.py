@@ -10,7 +10,7 @@ import pytest
 
 from rubiks.cube import Cube
 
-FACES = ["U", "L", "F", "D", "R", "B"]
+FACES = ["U", "R", "F", "D", "L", "B"]
 
 
 def numbered_cube() -> Cube:
@@ -34,7 +34,7 @@ def test_new_cube_is_solved():
 @pytest.mark.parametrize("color", range(6))
 def test_each_color_appears_nine_times(color):
     """Chaque couleur (0 à 5) apparait exactement 9 fois sur un cube neuf."""
-    cube = numbered_cube()
+    cube = Cube()
     assert (cube.state == color).sum() == 9
 
 
@@ -54,7 +54,7 @@ def test_quarter_turn_four_times_is_identity(face):
 
 
 @pytest.mark.parametrize("face", FACES)
-@pytest.mark.parametreize(
+@pytest.mark.parametrize(
     ("suffixe", "inverse_suffixe"),
     [("", "'"), ("'", ""), ("2", "2")],
     ids=["X puis X'", "X' puis X", "X2 puis X2"],
@@ -89,15 +89,33 @@ def test_sexy_move_six_times_is_identity():
 
 
 @pytest.mark.parametrize("face", FACES)
-def test_copy_is_independant(face):
+def test_copy_is_independent(face):
     """Une copie est identique à l'originale
     mais indépendante de lui.
     """
     cube = numbered_cube()
     cube_copy = cube.copy()
 
-    assert (np.array_equal(cube.state, cube_copy.state))
+    assert np.array_equal(cube.state, cube_copy.state)
 
-    cube_copy.state[0,0,0] == 99
+    cube_copy.state[0, 0, 0] == 99
 
     assert cube.state[0, 0, 0] == 0
+
+
+def test_str_of_solved_cube():
+    """Le patron d'un cube neuf affiche chaque face avec la lettre de sa couleur."""
+    expected = "\n".join(
+        [
+            "       W W W",
+            "       W W W",
+            "       W W W",
+            "O O O  G G G  R R R  B B B",
+            "O O O  G G G  R R R  B B B",
+            "O O O  G G G  R R R  B B B",
+            "       Y Y Y",
+            "       Y Y Y",
+            "       Y Y Y",
+        ]
+    )
+    assert str(Cube()) == expected

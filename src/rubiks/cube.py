@@ -71,3 +71,21 @@ class Cube:
         new_cube = Cube()
         new_cube.state = self.state.copy()
         return new_cube
+
+    def __str__(self) -> str:
+        """Renvoie le patron déplié du cube, une lettre par couleur (W R G Y O B)."""
+        letters = "WRGYOB"
+        gap = "  "
+        indent = " " * (5 + len(gap))  # 5 = largeur d'une face ("W W W")
+
+        def row(face: int, line: int) -> str:
+            return " ".join(letters[color] for color in self.state[face, line])
+
+        lines = []
+        for line in range(3):  # U, en haut
+            lines.append(indent + row(0, line))
+        for line in range(3):  # L F R B, côte à côte
+            lines.append(gap.join(row(face, line) for face in (4, 2, 1, 5)))
+        for line in range(3):  # D, en bas
+            lines.append(indent + row(3, line))
+        return "\n".join(lines)
