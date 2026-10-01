@@ -17,7 +17,7 @@ def numbered_cube() -> Cube:
     """Renvoie un cube dont les 54 cases portent des numéros tous différents.
 
     Sur un cube résolu, une bande d'une seule couleur reste identique même
-    retournée: un bug d'ordre passerait inaperçu. Avec des numéros, chaque case 
+    retournée: un bug d'ordre passerait inaperçu. Avec des numéros, chaque case
     est reconnaissable
     et le moindre déplacement se voit.
     """
@@ -86,3 +86,12 @@ def test_sexy_move_six_times_is_identity():
         cube.apply("R U R' U'")
 
     assert np.array_equal(cube.state, initial_state)
+
+
+@pytest.mark.parametrize("face", FACES)
+def test_copy_is_independant(face):
+    cube = numbered_cube()
+    cube_copy = cube.copy()
+
+    cube.move(face)
+    assert not np.array_equal(cube.state, cube_copy.state)

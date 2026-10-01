@@ -65,3 +65,9 @@ class Cube:
             if not np.all(face == face[1, 1]):
                 return False
         return True
+
+    def copy(self) -> "Cube":
+        """Fabrique un nouveau cube dont le tableau est une copie de celui ci"""
+        new_cube = Cube()
+        new_cube.state = self.state.copy()
+        return new_cube
