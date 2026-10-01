@@ -46,3 +46,16 @@ face depuis l'extérieur ; ' = anti-horaire ; 2 = demi-tour. 18 mouvements.
 Pour garder l'état d'origine, on utilise ``copy()``, qui fabrique un cube
 indépendant (le tableau numpy est copié, pas partagé).
 """
+
+import numpy as np
+class Cube:
+    def __init__(self) :
+        self.state = np.arange(54).reshape(6, 3, 3)
+        for face in range(6):
+            self.state[face] == face
+
+    def is_solved():
+        for face in range(6):
+            color_to_compare = self.state[face][1][1]
+            if self.state[face] == color_to_compare:
+                return True
