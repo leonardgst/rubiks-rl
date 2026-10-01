@@ -127,3 +127,34 @@ class Cube:
         self.state[4, 2] = old.state[2, 2]  # L reçoit la ligne de F
         self.state[5, 2] = old.state[4, 2]  # B reçoit la ligne de L
         self.state[1, 2] = old.state[5, 2]  # R reçoit la ligne de B
+
+    def _quarter_turn_R(self) -> None:
+        """Quart de tour horaire de la face R, en modifiant le cube sur place."""
+        # Copie de l'état de départ : on lit dedans, on écrit dans self
+        old = self.copy()
+
+        # La face R tourne sur elle-même d'un quart de tour horaire (k=-1)
+        self.state[1] = np.rot90(self.state[1], k=-1)
+
+        # Chaque face reçoit la colonne de droite de la face d'en dessous
+        # sauf D qui recoit la colonne gauche de B à l'envers
+        self.state[0, ::,2] = old.state[2, ::,2]  # U reçoit la colonne droite de F
+        self.state[5, ::,2] = old.state[0, ::,2][::-1]  # B reçoit la colonne droite de U
+        self.state[3, ::,2] = old.state[5, ::,0][::-1]  # D reçoit la colonne gauche de B à l'envers
+        self.state[2, ::,2] = old.state[3, ::,2]  # F reçoit la colonne droite de D
+
+    def _quarter_turn_L(self) -> None:
+        """Quart de tour horaire de la face L, en modifiant le cube sur place."""
+        # Copie de l'état de départ : on lit dedans, on écrit dans self
+        old = self.copy()
+
+        # La face L tourne sur elle-même d'un quart de tour horaire (k=-1)
+        self.state[4] = np.rot90(self.state[4], k=-1)
+
+        # Chaque face reçoit la colonne de gauche de la face d'au dessus 
+        # sauf U qui recoit la colonne droite de B à l'envers
+        self.state[0, ::,0] = old.state[5, ::,2][::-1]  # U reçoit la colonne droite de B à l'envers
+        self.state[5, ::,0] = old.state[3, ::,0][::-1]  # B reçoit la colonne gauche de D
+        self.state[3, ::,0] = old.state[2, ::,0]  # D reçoit la colonne gauche de F
+        self.state[2, ::,0] = old.state[0, ::,0]  # F reçoit la colonne gauche de U
+    
