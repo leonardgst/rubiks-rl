@@ -48,16 +48,20 @@ indépendant (le tableau numpy est copié, pas partagé).
 """
 
 import numpy as np
-class Cube:
-    def __init__(self) -> None:
-        self.state = np.zeros((6, 3, 3), dtype=int)
 
+
+class Cube:
+    """Un rubik's cube 3x3 (représentation décrite en haut)"""
+
+    def __init__(self) -> None:
+        """Créer un cube résolu: la face i est entièrement de la couleur i."""
+        self.state = np.zeros((6, 3, 3), dtype=int)
         for face in range(6):
-            self.state[face][:] = face
+            self.state[face] = face
 
     def is_solved(self) -> bool:
-        for face in range(6):
-            color_to_compare = self.state[face, 1, 1]
-            if (self.state[face] == color_to_compare).sum() != 9:
+        """Renvoie True si chaque face est d'une seule couleur."""
+        for face in self.state:
+            if not np.all(face == face[1, 1]):
                 return False
         return True
