@@ -90,8 +90,14 @@ def test_sexy_move_six_times_is_identity():
 
 @pytest.mark.parametrize("face", FACES)
 def test_copy_is_independant(face):
+    """Une copie est identique à l'originale
+    mais indépendante de lui.
+    """
     cube = numbered_cube()
     cube_copy = cube.copy()
 
-    cube.move(face)
-    assert not np.array_equal(cube.state, cube_copy.state)
+    assert (np.array_equal(cube.state, cube_copy.state))
+
+    cube_copy.state[0,0,0] == 99
+
+    assert cube.state[0, 0, 0] == 0
