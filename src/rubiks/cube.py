@@ -89,3 +89,21 @@ class Cube:
         for line in range(3):  # D, en bas
             lines.append(indent + row(3, line))
         return "\n".join(lines)
+
+    def move(self, name: str) -> None:
+        """Applique un mouvement au cube, en le modifiant sur place (U seulement)."""
+        if name != "U":
+            raise ValueError(f"mouvement non géré : {name!r}")
+
+        # Copie de l'état de départ : on lit dedans, on écrit dans self
+        old = self.copy()
+
+        # La face U tourne sur elle-même d'un quart de tour horaire (k=-1)
+        self.state[0] = np.rot90(self.state[0], k=-1)
+
+        # Chaque face reçoit la ligne du haut de la face à sa droite
+        self.state[2, 0] = old.state[1, 0]  # F reçoit la ligne de R
+        self.state[4, 0] = old.state[2, 0]  # L reçoit la ligne de F
+        self.state[5, 0] = old.state[4, 0]  # B reçoit la ligne de L
+        self.state[1, 0] = old.state[5, 0]  # R reçoit la ligne de B
+        # Le reste du cube (dont toute la face D) ne bouge pas
