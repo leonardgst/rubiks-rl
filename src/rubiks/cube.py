@@ -94,7 +94,7 @@ class Cube:
         """Applique un mouvement au cube, en le modifiant sur place (U, U', U2)."""
         face, suffix = name[:1], name[1:]
         quarter_turns = {"": 1, "2": 2, "'": 3}
-        if face != "U" or suffix not in quarter_turns:
+        if face not in ("U", "D") or suffix not in quarter_turns:
             raise ValueError(f"mouvement non géré : {name!r}")
 
         for _ in range(quarter_turns[suffix]):
@@ -113,3 +113,17 @@ class Cube:
         self.state[4, 0] = old.state[2, 0]  # L reçoit la ligne de F
         self.state[5, 0] = old.state[4, 0]  # B reçoit la ligne de L
         self.state[1, 0] = old.state[5, 0]  # R reçoit la ligne de B
+
+    def _quarter_turn_D(self) -> None:
+        """Quart de tour horaire de la face D, en modifiant le cube sur place."""
+        # Copie de l'état de départ : on lit dedans, on écrit dans self
+        old = self.copy()
+
+        # La face D tourne sur elle-même d'un quart de tour horaire (k=-1)
+        self.state[3] = np.rot90(self.state[3], k=-1)
+
+        # Chaque face reçoit la ligne du bas de la face à sa droite
+        self.state[2, 2] = old.state[1, 2]  # F reçoit la ligne de R
+        self.state[4, 2] = old.state[2, 2]  # L reçoit la ligne de F
+        self.state[5, 2] = old.state[4, 2]  # B reçoit la ligne de L
+        self.state[1, 2] = old.state[5, 2]  # R reçoit la ligne de B
