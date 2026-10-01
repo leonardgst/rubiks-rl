@@ -46,5 +46,3 @@ face depuis l'extérieur ; ' = anti-horaire ; 2 = demi-tour. 18 mouvements.
 Pour garder l'état d'origine, on utilise ``copy()``, qui fabrique un cube
 indépendant (le tableau numpy est copié, pas partagé).
 """
-
-
