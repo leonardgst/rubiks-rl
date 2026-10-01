@@ -49,13 +49,15 @@ indépendant (le tableau numpy est copié, pas partagé).
 
 import numpy as np
 class Cube:
-    def __init__(self) :
-        self.state = np.arange(54).reshape(6, 3, 3)
-        for face in range(6):
-            self.state[face] == face
+    def __init__(self) -> None:
+        self.state = np.zeros((6, 3, 3), dtype=int)
 
-    def is_solved():
         for face in range(6):
-            color_to_compare = self.state[face][1][1]
-            if self.state[face] == color_to_compare:
-                return True
+            self.state[face][:] = face
+
+    def is_solved(self) -> bool:
+        for face in range(6):
+            color_to_compare = self.state[face, 1, 1]
+            if (self.state[face] == color_to_compare).sum() != 9:
+                return False
+        return True
