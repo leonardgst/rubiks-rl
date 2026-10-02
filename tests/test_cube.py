@@ -301,20 +301,120 @@ def test_quarter_turn_B_from_solved_cube():
     assert np.all(cube.state[5] == 5)
 
 
-def test_U_turns_the_U_face_clockwise():
-    """Test de référence : après 'R', la colonne de droite de U est verte.
-    Après 'U' (quart de tour horaire, vu de dessus), cette bande verte est
-    devenue la ligne du bas de U, et le reste de U est blanc.
-    """
-    cube = Cube()
-    cube.move("R")
-    cube.move("U")
+@pytest.mark.parametrize(
+    ("move", "face_index"),
+    [
+        ("U", 0),
+        ("R", 1),
+        ("F", 2),
+        ("D", 3),
+        ("L", 4),
+        ("B", 5),
+    ],
+)
+def test_move_turns_its_face_clockwise(move, face_index):
+    """Vérifie que chaque mouvement tourne sa propre face d'un quart de tour
+    dans le sens horaire, lorsqu'elle est regardée depuis l'extérieur.
 
-    expected_face_U = np.array(
-        [
-            [0, 0, 0],
-            [0, 0, 0],
-            [2, 2, 2],
-        ]
-    )
-    assert np.array_equal(cube.state[0], expected_face_U)
+    Le cube numéroté permet de vérifier la position exacte de chaque case,
+    contrairement à un cube résolu dont chaque face est uniforme.
+    """
+    cube = numbered_cube()
+    initial_face = cube.state[face_index].copy()
+
+    cube.move(move)
+
+    expected_face = np.rot90(initial_face, k=-1)
+
+    assert np.array_equal(cube.state[face_index], expected_face)
+
+
+@pytest.mark.parametrize("face", FACES)
+def test_quarter_turn_moves_twenty_stickers(face):
+    """Vérifie qu'un quart de tour déplace exactement 20 cases.
+
+    Un mouvement déplace les 8 cases non centrales de la face tournée,
+    ainsi que 12 cases appartenant aux quatre faces adjacentes.
+    Le cube numéroté permet de détecter chaque changement de position.
+    """
+    cube = numbered_cube()
+    initial_state = cube.state.copy()
+
+    cube.move(face)
+
+    number_of_moved_stickers = (cube.state != initial_state).sum()
+
+    assert number_of_moved_stickers == 20
+
+@pytest.mark.parametrize("face", FACES)
+@pytest.mark.parametrize("suffix", ["", "'", "2"])
+def test_centers_never_move(face, suffix):
+    """Vérifie que les six centres restent à leur position initiale.
+
+    Le test couvre les quarts de tour horaires, les quarts de tour
+    antihoraires et les demi-tours pour chacune des six faces.
+    """
+    cube = numbered_cube()
+    initial_centers = cube.state[:, 1, 1].copy()
+
+    cube.move(face + suffix)
+
+    assert np.array_equal(cube.state[:, 1, 1], initial_centers)
+
+
+@pytest.mark.parametrize(
+    ("first_face", "second_face"),
+    [
+        ("U", "D"),
+        ("R", "L"),
+        ("F", "B"),
+    ],
+    ids=["U et D", "R et L", "F et B"],
+)
+def test_opposite_faces_commute(first_face, second_face):
+    """Vérifie que deux mouvements sur des faces opposées commutent.
+
+    Appliquer la première face puis la seconde doit produire le même état
+    que les appliquer dans l'ordre inverse, car deux faces opposées ne
+    déplacent aucune case commune.
+    """
+    first_cube = numbered_cube()
+    second_cube = numbered_cube()
+
+    first_cube.move(first_face)
+    first_cube.move(second_face)
+
+    second_cube.move(second_face)
+    second_cube.move(first_face)
+
+    assert np.array_equal(first_cube.state, second_cube.state)
+
+def test_apply_is_equivalent_to_individual_moves():
+    """Vérifie si la fonction apply et une suite de fonction move renvoient le même cube."""
+    first_cube = numbered_cube()
+    second_cube = numbered_cube()
+
+    first_cube.apply("U R U' U R'")
+    second_cube.move("U")
+    second_cube.move("R")
+    second_cube.move("U'")
+    second_cube.move("U")
+    second_cube.move("R'")
+
+    assert np.array_equal(first_cube.state, second_cube.state)
+
+def test_apply_empty_string_does_nothing():
+    """Vérifie qu'une chaîne vide ne modifie pas l'état du cube."""
+    cube = numbered_cube()
+    initial_state = cube.state.copy()
+
+    cube.apply("")
+
+    assert np.array_equal(cube.state, initial_state)
+
+def test_apply_unknown_move_raises_value_error():
+    """Vérifie qu'une suite contenant un mouvement inconnu lève ValueError."""
+    cube = Cube()
+
+    with pytest.raises(ValueError):
+        cube.apply("R U X F")

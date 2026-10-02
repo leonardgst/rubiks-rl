@@ -90,27 +90,6 @@ class Cube:
             lines.append(indent + row(3, line))
         return "\n".join(lines)
 
-    def move(self, name: str) -> None:
-        """Applique un mouvement au cube, en le modifiant sur place (U, U', U2)."""
-        face, suffix = name[:1], name[1:]
-        quarter_turns = {"": 1, "2": 2, "'": 3}
-        if face not in ("U", "D", "R", "L", "F", "B") or suffix not in quarter_turns:
-            raise ValueError(f"mouvement non géré : {name!r}")
-
-        for _ in range(quarter_turns[suffix]):
-            if face == "U":
-                self._quarter_turn_U()
-            elif face == "D":
-                self._quarter_turn_D()
-            elif face == "R":
-                self._quarter_turn_R()
-            elif face == "L":
-                self._quarter_turn_L()
-            elif face == "F":
-                self._quarter_turn_F()
-            elif face == "B":
-                self._quarter_turn_B()
-
     def _quarter_turn_U(self) -> None:
         """Quart de tour horaire de la face U, en modifiant le cube sur place."""
         # Copie de l'état de départ : on lit dedans, on écrit dans self
@@ -211,3 +190,31 @@ class Cube:
         self.state[3, 2] = old.state[4, :, 0]
         # R recoit la ligne du bas de D dans sa colonne de gauche
         self.state[1, :, 2] = old.state[3, 2][::-1]
+
+    def move(self, name: str) -> None:
+        """Applique un mouvement au cube, en le modifiant sur place (U, U', U2)."""
+        face, suffix = name[:1], name[1:]
+        quarter_turns = {"": 1, "2": 2, "'": 3}
+        if face not in ("U", "D", "R", "L", "F", "B") or suffix not in quarter_turns:
+            raise ValueError(f"mouvement non géré : {name!r}")
+
+        for _ in range(quarter_turns[suffix]):
+            if face == "U":
+                self._quarter_turn_U()
+            elif face == "D":
+                self._quarter_turn_D()
+            elif face == "R":
+                self._quarter_turn_R()
+            elif face == "L":
+                self._quarter_turn_L()
+            elif face == "F":
+                self._quarter_turn_F()
+            elif face == "B":
+                self._quarter_turn_B()
+
+    def apply(self, moves: str) -> None:
+        """Applique une suite de mouvements au cube, en le modifiant sur place"""
+        moves_list = str.split(moves)
+        for move in moves_list:
+            self.move(move)
+
