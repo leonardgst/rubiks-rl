@@ -13,7 +13,7 @@ def test_importing_cube_does_not_load_pygame():
     code = "import sys, rubiks.cube; print('pygame' in sys.modules)"
 
     result = subprocess.run(
-    [sys.executable, "-c", code], capture_output=True, text=True, check=True
+        [sys.executable, "-c", code], capture_output=True, text=True, check=True
     )
 
     assert result.stdout.strip() == "False"
