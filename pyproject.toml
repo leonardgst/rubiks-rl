@@ -1,6 +1,6 @@
 [project]
 name = "rubiks"
-version = "0.1.0"
+version = "0.2.0"
 description = "Rubik's Cube 3x3 jouable en 3D, résolu par un agent de reinforcement learning"
 readme = "README.md"
 authors = [
