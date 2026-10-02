@@ -7,7 +7,9 @@ authors = [
     { name = "leonardgst", email = "goussetleonard@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "numpy>=2.5.3",
+]
 
 [project.scripts]
 rubiks = "rubiks:main"
@@ -22,8 +24,8 @@ dev = [
     "ruff>=0.16.9",
 ]
 
-  [tool.pytest.ini_options]
-  testpaths = ["tests"]          # pytest cherche les tests uniquement dans tests/
+[tool.pytest.ini_options]
+testpaths = ["tests"]          # pytest cherche les tests uniquement dans tests/
 
-  [tool.ruff.lint]
-  select = ["E", "F", "I"]       # E : style, F : erreurs probables, I : ordre des imports
+[tool.ruff.lint]
+select = ["E", "F", "I"]       # E : style, F : erreurs probables, I : ordre des imports
