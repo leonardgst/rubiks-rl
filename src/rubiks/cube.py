@@ -48,6 +48,28 @@ indépendant (le tableau numpy est copié, pas partagé).
 """
 
 import numpy as np
+import random
+
+MOVES = (
+    "U",
+    "U'",
+    "U2",
+    "R",
+    "R'",
+    "R2",
+    "F",
+    "F'",
+    "F2",
+    "D",
+    "D'",
+    "D2",
+    "L",
+    "L'",
+    "L2",
+    "B",
+    "B'",
+    "B2",
+)
 
 
 class Cube:
@@ -173,7 +195,6 @@ class Cube:
         # L recoit la ligne du haut de D dans sa colonne de droite
         self.state[4, :, 2] = old.state[3, 0]
 
-
     def _quarter_turn_B(self) -> None:
         """Quart de tour de la face B, en modifiant le cube sur place."""
         # Copie de l'état de départ : on lit dedans, on écrit dans self
@@ -218,3 +239,32 @@ class Cube:
         for move in moves_list:
             self.move(move)
 
+    def scramble(self, n: int, seed: int | None = None) -> list[str]:
+        """Applique n mouvements aléatoires et renvoie la liste des mouvements joués.
+
+        La graine permet d'obtenir un mélange reproductible : deux appels avec
+        la même graine produisent la même suite de mouvements.
+        """
+        generator = random.Random(seed)
+        moves_played = []
+
+        for _ in range(n):
+            move = generator.choice(MOVES)
+            moves_played.append(move)
+            self.move(move)
+
+        return moves_played
+
+    def inverse_sequence(self, moves: list) -> list[str]:
+        """Applique la suite inverse de mouvement d'une liste"""
+
+        def inverse_move(self, move: str) -> str:
+            """Renvoie le mouvement inverse d'un mouvement"""
+            if move.endswith("2"):
+                return move
+            elif move.endswith("'"):
+                return move[:1]
+            else:
+                return move + "'"
+
+        return [inverse_move(move) for move in reversed(moves)]

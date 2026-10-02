@@ -346,6 +346,7 @@ def test_quarter_turn_moves_twenty_stickers(face):
 
     assert number_of_moved_stickers == 20
 
+
 @pytest.mark.parametrize("face", FACES)
 @pytest.mark.parametrize("suffix", ["", "'", "2"])
 def test_centers_never_move(face, suffix):
@@ -389,6 +390,7 @@ def test_opposite_faces_commute(first_face, second_face):
 
     assert np.array_equal(first_cube.state, second_cube.state)
 
+
 def test_apply_is_equivalent_to_individual_moves():
     """Vérifie si la fonction apply et une suite de fonction move renvoient le même cube."""
     first_cube = numbered_cube()
@@ -403,6 +405,7 @@ def test_apply_is_equivalent_to_individual_moves():
 
     assert np.array_equal(first_cube.state, second_cube.state)
 
+
 def test_apply_empty_string_does_nothing():
     """Vérifie qu'une chaîne vide ne modifie pas l'état du cube."""
     cube = numbered_cube()
@@ -411,6 +414,7 @@ def test_apply_empty_string_does_nothing():
     cube.apply("")
 
     assert np.array_equal(cube.state, initial_state)
+
 
 def test_apply_unknown_move_raises_value_error():
     """Vérifie qu'une suite contenant un mouvement inconnu lève ValueError."""
