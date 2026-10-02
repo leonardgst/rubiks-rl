@@ -1,18 +1,23 @@
-"""Tests de la disposition du patron dans la fenêtre 2D.
+"""Tests de l'affichage 2D : disposition du patron et textes.
 
 Aucun de ces tests n'ouvre de fenêtre : ils ne testent que des calculs
-(sticker_position et les constantes de view2d).
+(sticker_position, scramble_lines et les constantes de view2d). Les touches
+du clavier sont testées dans test_game.py.
 """
 
+import pygame
 import pytest
 
-from rubiks.cube import MOVES
 from rubiks.render.view2d import (
     COLORS,
+    HELP_LINES,
+    MARGIN,
+    MOVES_PER_LINE,
     STICKER_SIZE,
+    TEXT_SIZE,
     WINDOW_HEIGHT,
     WINDOW_WIDTH,
-    key_to_move,
+    scramble_lines,
     sticker_position,
 )
 
@@ -75,35 +80,42 @@ def test_neighbouring_stickers_touch(first, second, dx, dy):
     assert (x2 - x1, y2 - y1) == (dx * STICKER_SIZE, dy * STICKER_SIZE)
 
 
-# ------------------------------------------------------------------------
-# clavier
-# ------------------------------------------------------------------------
+# --------------------------------------------------------------------------
+# Texte du mélange
+# --------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("face", ["U", "D", "L", "R", "F", "B"])
-def test_letter_key_gives_clockwise_move(face):
-    """La touche d'une face (en minuscule, comme pygame la nomme) donne son
-    quart de tour horaire."""
-    assert key_to_move(face.lower(), shift=False) == face
+def test_no_scramble_gives_no_line():
+    """Tant qu'on n'a pas mélangé, aucune ligne de mélange n'est affichée."""
+    assert scramble_lines([]) == []
 
 
-@pytest.mark.parametrize("face", ["U", "D", "L", "R", "F", "B"])
-def test_shift_letter_key_gives_inverse_move(face):
-    """Avec Maj, la même touche donne le mouvement inverse."""
-    assert key_to_move(face.lower(), shift=True) == face + "'"
+def test_short_scramble_fits_on_one_line():
+    """Un mélange court tient sur une ligne, qui commence par « Mélange : »."""
+    assert scramble_lines(["R", "U'", "F2"]) == ["Mélange : R U' F2"]
 
 
-@pytest.mark.parametrize("shift", [False, True])
-@pytest.mark.parametrize(
-    "key_name", ["x", "a", "space", "escape", "backspace", "return", "1", ""]
-)
-def test_other_keys_give_no_move(key_name, shift):
-    """Une touche qui n'est pas une face ne donne aucun mouvement."""
-    assert key_to_move(key_name, shift) is None
+def test_long_scramble_is_split_without_losing_moves():
+    """Un long mélange est découpé, sans perdre ni ajouter de coup."""
+    moves = ["R", "U"] * 15  # 30 coups
+
+    lines = scramble_lines(moves)
+
+    assert len(lines) == 3  # 12 + 12 + 6 coups
+    all_moves = " ".join(lines).removeprefix("Mélange : ").split()
+    assert all_moves == moves
+    assert all(len(line.split()) <= MOVES_PER_LINE + 2 for line in lines)
 
 
-@pytest.mark.parametrize("key_name", list("udlrfb"))
-@pytest.mark.parametrize("shift", [False, True])
-def test_every_key_move_is_a_valid_move(key_name, shift):
-    """Chaque mouvement donné par le clavier fait partie des 18 de cube.py."""
-    assert key_to_move(key_name, shift) in MOVES
+@pytest.mark.parametrize("line", HELP_LINES)
+def test_help_lines_fit_in_the_window(line):
+    """Chaque ligne d'aide tient en largeur dans la fenêtre (rien n'est coupé).
+
+    pygame.font mesure un texte sans ouvrir de fenêtre.
+    """
+    pygame.font.init()
+    font = pygame.font.Font(None, TEXT_SIZE)
+
+    width, _ = font.size(line)
+
+    assert MARGIN + width <= WINDOW_WIDTH - MARGIN
