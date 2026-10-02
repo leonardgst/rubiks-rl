@@ -47,8 +47,10 @@ Pour garder l'état d'origine, on utilise ``copy()``, qui fabrique un cube
 indépendant (le tableau numpy est copié, pas partagé).
 """
 
-import numpy as np
+
 import random
+
+import numpy as np
 
 MOVES = (
     "U",
@@ -256,14 +258,14 @@ class Cube:
         return moves_played
 
     def inverse_sequence(self, moves: list) -> list[str]:
-        """Applique la suite inverse de mouvement d'une liste"""
+        """Renvoie la suite inverse de mouvement d'une liste"""
 
-        def inverse_move(self, move: str) -> str:
+        def inverse_move(move: str) -> str:
             """Renvoie le mouvement inverse d'un mouvement"""
             if move.endswith("2"):
                 return move
             elif move.endswith("'"):
-                return move[:1]
+                return move[:-1]
             else:
                 return move + "'"
 
