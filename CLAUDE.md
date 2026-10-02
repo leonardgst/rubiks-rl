@@ -52,4 +52,4 @@ uv add <paquet>                  # nouvelle dépendance (uv add --dev <outil> po
 
 ## Phase en cours
 
-Phase 1
+Phase 2
