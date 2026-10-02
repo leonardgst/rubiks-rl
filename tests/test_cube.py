@@ -147,6 +147,160 @@ def test_quarter_turn_U_from_solved_cube():
     assert np.all(cube.state[3] == 3)
 
 
+def test_quarter_turn_D_from_solved_cube():
+    """Test de référence : on part d'un cube résolu (U=W ; F=G) et on fait 'D'
+    (quart de tour horaire, vu de dessous). Alors :
+        - la ligne du bas de F est orange
+        - la ligne du bas de L est bleu
+        - la ligne du bas de B est rouge
+        - la ligne du bas de R est verte
+    et tout le reste du cube est inchangé.
+    """
+    cube = Cube()
+    cube.move("D")
+
+    # Les 4 lignes du bas ont tourné d'une face à la suivante
+    assert (cube.state[1, 2] == 2).sum() == 3  # R : verte
+    assert (cube.state[2, 2] == 4).sum() == 3  # F : orange
+    assert (cube.state[4, 2] == 5).sum() == 3  # L : bleu
+    assert (cube.state[5, 2] == 1).sum() == 3  # B : rouge
+
+    # Ce qui ne doit pas bouger : le milieu et le haut des 4 faces, et toute la face U
+    assert np.all(cube.state[1, :1] == 1)
+    assert np.all(cube.state[2, :1] == 2)
+    assert np.all(cube.state[4, :1] == 4)
+    assert np.all(cube.state[5, :1] == 5)
+    assert np.all(cube.state[0] == 0)
+
+
+def test_quarter_turn_R_from_solved_cube():
+    """Test de référence : on part d'un cube résolu et on fait R.
+
+    Alors :
+        - la colonne droite de U devient verte ;
+        - la colonne droite de F devient jaune ;
+        - la colonne droite de D devient bleue ;
+        - la colonne gauche de B devient blanche ;
+        - tout le reste est inchangé.
+    """
+    cube = Cube()
+    cube.move("R")
+
+    # Colonnes déplacées
+    assert np.all(cube.state[0, :, 2] == 2)  # U droite : verte
+    assert np.all(cube.state[2, :, 2] == 3)  # F droite : jaune
+    assert np.all(cube.state[3, :, 2] == 5)  # D droite : bleue
+    assert np.all(cube.state[5, :, 0] == 0)  # B gauche : blanche
+
+    # Parties qui ne doivent pas changer
+    assert np.all(cube.state[0, :, :2] == 0)  # U : gauche et milieu
+    assert np.all(cube.state[2, :, :2] == 2)  # F : gauche et milieu
+    assert np.all(cube.state[3, :, :2] == 3)  # D : gauche et milieu
+    assert np.all(cube.state[5, :, 1:] == 5)  # B : milieu et droite
+
+    # La face L ne bouge pas
+    assert np.all(cube.state[4] == 4)
+
+    # La face R tourne, mais reste rouge car elle était uniforme
+    assert np.all(cube.state[1] == 1)
+
+
+def test_quarter_turn_L_from_solved_cube():
+    """Test de référence : on part d'un cube résolu et on fait L.
+
+    Alors :
+        - la colonne gauche de U devient bleue ;
+        - la colonne gauche de F devient blanche ;
+        - la colonne gauche de D devient verte ;
+        - la colonne droite de B devient jaune ;
+        - tout le reste est inchangé.
+    """
+    cube = Cube()
+    cube.move("L")
+
+    # Colonnes déplacées
+    assert np.all(cube.state[0, :, 0] == 5)  # U gauche : bleue
+    assert np.all(cube.state[2, :, 0] == 0)  # F gauche : blanche
+    assert np.all(cube.state[3, :, 0] == 2)  # D gauche : verte
+    assert np.all(cube.state[5, :, 2] == 3)  # B droite : jaune
+
+    # Parties qui ne doivent pas changer
+    assert np.all(cube.state[0, :, 1:] == 0)  # U : milieu et droite
+    assert np.all(cube.state[2, :, 1:] == 2)  # F : milieu et droite
+    assert np.all(cube.state[3, :, 1:] == 3)  # D : milieu et droite
+    assert np.all(cube.state[5, :, :2] == 5)  # B : gauche et milieu
+
+    # La face R ne bouge pas
+    assert np.all(cube.state[1] == 1)
+
+    # La face L tourne, mais reste orange car elle était uniforme
+    assert np.all(cube.state[4] == 4)
+
+
+def test_quarter_turn_F_from_solved_cube():
+    """Test de référence : on part d'un cube résolu et on fait F.
+
+    Alors :
+        - la ligne du bas de U devient orange ;
+        - la colonne gauche de R devient blanche ;
+        - la ligne du haut de D devient rouge ;
+        - la colonne droite de L devient jaune ;
+        - tout le reste est inchangé.
+    """
+    cube = Cube()
+    cube.move("F")
+
+    # Lignes et colonnes déplacées
+    assert np.all(cube.state[0, 2] == 4)  # U bas : orange
+    assert np.all(cube.state[1, :, 0] == 0)  # R gauche : blanche
+    assert np.all(cube.state[3, 0] == 1)  # D haut : rouge
+    assert np.all(cube.state[4, :, 2] == 3)  # L droite : jaune
+
+    # Parties qui ne doivent pas changer
+    assert np.all(cube.state[0, :2] == 0)  # U : haut et milieu
+    assert np.all(cube.state[1, :, 1:] == 1)  # R : milieu et droite
+    assert np.all(cube.state[3, 1:] == 3)  # D : milieu et bas
+    assert np.all(cube.state[4, :, :2] == 4)  # L : gauche et milieu
+
+    # La face B ne bouge pas
+    assert np.all(cube.state[5] == 5)
+
+    # La face F tourne, mais reste verte car elle était uniforme
+    assert np.all(cube.state[2] == 2)
+
+
+def test_quarter_turn_B_from_solved_cube():
+    """Test de référence : on part d'un cube résolu et on fait B.
+
+    Alors :
+        - la ligne du haut de U devient rouge ;
+        - la colonne gauche de L devient blanche ;
+        - la ligne du bas de D devient orange ;
+        - la colonne droite de R devient jaune ;
+        - tout le reste est inchangé.
+    """
+    cube = Cube()
+    cube.move("B")
+
+    # Lignes et colonnes déplacées
+    assert np.all(cube.state[0, 0] == 1)  # U haut : rouge
+    assert np.all(cube.state[4, :, 0] == 0)  # L gauche : blanche
+    assert np.all(cube.state[3, 2] == 4)  # D bas : orange
+    assert np.all(cube.state[1, :, 2] == 3)  # R droite : jaune
+
+    # Parties qui ne doivent pas changer
+    assert np.all(cube.state[0, 1:] == 0)  # U : milieu et bas
+    assert np.all(cube.state[4, :, 1:] == 4)  # L : milieu et droite
+    assert np.all(cube.state[3, :2] == 3)  # D : haut et milieu
+    assert np.all(cube.state[1, :, :2] == 1)  # R : gauche et milieu
+
+    # La face F ne bouge pas
+    assert np.all(cube.state[2] == 2)
+
+    # La face B tourne, mais reste bleue car elle était uniforme
+    assert np.all(cube.state[5] == 5)
+
+
 def test_U_turns_the_U_face_clockwise():
     """Test de référence : après 'R', la colonne de droite de U est verte.
     Après 'U' (quart de tour horaire, vu de dessus), cette bande verte est

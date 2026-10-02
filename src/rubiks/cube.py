@@ -94,11 +94,22 @@ class Cube:
         """Applique un mouvement au cube, en le modifiant sur place (U, U', U2)."""
         face, suffix = name[:1], name[1:]
         quarter_turns = {"": 1, "2": 2, "'": 3}
-        if face not in ("U", "D") or suffix not in quarter_turns:
+        if face not in ("U", "D", "R", "L", "F", "B") or suffix not in quarter_turns:
             raise ValueError(f"mouvement non géré : {name!r}")
 
         for _ in range(quarter_turns[suffix]):
-            self._quarter_turn_U()
+            if face == "U":
+                self._quarter_turn_U()
+            elif face == "D":
+                self._quarter_turn_D()
+            elif face == "R":
+                self._quarter_turn_R()
+            elif face == "L":
+                self._quarter_turn_L()
+            elif face == "F":
+                self._quarter_turn_F()
+            elif face == "B":
+                self._quarter_turn_B()
 
     def _quarter_turn_U(self) -> None:
         """Quart de tour horaire de la face U, en modifiant le cube sur place."""
@@ -108,7 +119,7 @@ class Cube:
         # La face U tourne sur elle-même d'un quart de tour horaire (k=-1)
         self.state[0] = np.rot90(self.state[0], k=-1)
 
-        # Chaque face reçoit la ligne du haut de la face à sa droite
+        # Cycle = L -> B -> R -> F -> L
         self.state[2, 0] = old.state[1, 0]  # F reçoit la ligne de R
         self.state[4, 0] = old.state[2, 0]  # L reçoit la ligne de F
         self.state[5, 0] = old.state[4, 0]  # B reçoit la ligne de L
@@ -122,11 +133,11 @@ class Cube:
         # La face D tourne sur elle-même d'un quart de tour horaire (k=-1)
         self.state[3] = np.rot90(self.state[3], k=-1)
 
-        # Chaque face reçoit la ligne du bas de la face à sa droite
-        self.state[2, 2] = old.state[1, 2]  # F reçoit la ligne de R
-        self.state[4, 2] = old.state[2, 2]  # L reçoit la ligne de F
-        self.state[5, 2] = old.state[4, 2]  # B reçoit la ligne de L
-        self.state[1, 2] = old.state[5, 2]  # R reçoit la ligne de B
+        # Cycle = L -> F -> R -> B -> L
+        self.state[2, 2] = old.state[4, 2]  # F reçoit la ligne de L
+        self.state[4, 2] = old.state[5, 2]  # L reçoit la ligne de B
+        self.state[5, 2] = old.state[1, 2]  # B reçoit la ligne de R
+        self.state[1, 2] = old.state[2, 2]  # R reçoit la ligne de F
 
     def _quarter_turn_R(self) -> None:
         """Quart de tour horaire de la face R, en modifiant le cube sur place."""
@@ -137,11 +148,15 @@ class Cube:
         self.state[1] = np.rot90(self.state[1], k=-1)
 
         # Chaque face reçoit la colonne de droite de la face d'en dessous
-        # sauf D qui recoit la colonne gauche de B à l'envers
-        self.state[0, ::,2] = old.state[2, ::,2]  # U reçoit la colonne droite de F
-        self.state[5, ::,2] = old.state[0, ::,2][::-1]  # B reçoit la colonne droite de U
-        self.state[3, ::,2] = old.state[5, ::,0][::-1]  # D reçoit la colonne gauche de B à l'envers
-        self.state[2, ::,2] = old.state[3, ::,2]  # F reçoit la colonne droite de D
+        # sauf D qui recoit la colonne gauche de B inversée
+        self.state[0, ::, 2] = old.state[2, ::, 2]  # U reçoit la colonne droite de F
+        self.state[5, ::, 0] = old.state[0, ::, 2][
+            ::-1
+        ]  # B reçoit la colonne droite de U inversée dans sa colonne de gauche
+        self.state[3, ::, 2] = old.state[5, ::, 0][
+            ::-1
+        ]  # D reçoit la colonne gauche de B inversée
+        self.state[2, ::, 2] = old.state[3, ::, 2]  # F reçoit la colonne droite de D
 
     def _quarter_turn_L(self) -> None:
         """Quart de tour horaire de la face L, en modifiant le cube sur place."""
@@ -151,10 +166,48 @@ class Cube:
         # La face L tourne sur elle-même d'un quart de tour horaire (k=-1)
         self.state[4] = np.rot90(self.state[4], k=-1)
 
-        # Chaque face reçoit la colonne de gauche de la face d'au dessus 
-        # sauf U qui recoit la colonne droite de B à l'envers
-        self.state[0, ::,0] = old.state[5, ::,2][::-1]  # U reçoit la colonne droite de B à l'envers
-        self.state[5, ::,0] = old.state[3, ::,0][::-1]  # B reçoit la colonne gauche de D
-        self.state[3, ::,0] = old.state[2, ::,0]  # D reçoit la colonne gauche de F
-        self.state[2, ::,0] = old.state[0, ::,0]  # F reçoit la colonne gauche de U
-    
+        # Chaque face reçoit la colonne de gauche de la face d'au dessus
+        # sauf U qui recoit la colonne droite de B inversée
+        self.state[0, ::, 0] = old.state[5, ::, 2][
+            ::-1
+        ]  # U reçoit la colonne droite de B à l'envers dans sa colonne de gauche
+        self.state[5, ::, 2] = old.state[3, ::, 0][
+            ::-1
+        ]  # B reçoit la colonne gauche de D inversée dans sa colonne de droite
+        self.state[3, ::, 0] = old.state[2, ::, 0]  # D reçoit la colonne gauche de F
+        self.state[2, ::, 0] = old.state[0, ::, 0]  # F reçoit la colonne gauche de U
+
+    def _quarter_turn_F(self) -> None:
+        """Quart de tour de la face F, en modifiant le cube sur place."""
+        # Copie de l'état de départ : on lit dedans, on écrit dans self
+        old = self.copy()
+
+        # La face F tourne sur elle-même d'un quart de tour horaire (k=-1)
+        self.state[2] = np.rot90(self.state[2], k=-1)
+
+        # U recoit la colonne de droite de L dans sa ligne du bas
+        self.state[0, 2] = old.state[4, :, 2][::-1]
+        # R recoit la ligne du bas de U dans sa colonne de gauche
+        self.state[1, :, 0] = old.state[0, 2]
+        # D recoit la colonne de gauche de R dans sa ligne du haut
+        self.state[3, 0] = old.state[1, :, 0][::-1]
+        # L recoit la ligne du haut de D dans sa colonne de droite
+        self.state[4, :, 2] = old.state[3, 0]
+
+
+    def _quarter_turn_B(self) -> None:
+        """Quart de tour de la face B, en modifiant le cube sur place."""
+        # Copie de l'état de départ : on lit dedans, on écrit dans self
+        old = self.copy()
+
+        # La face B tourne sur elle-même d'un quart de tour horaire (k=-1)
+        self.state[5] = np.rot90(self.state[5], k=-1)
+
+        # U recoit la colonne de droite de R dans sa ligne du haut
+        self.state[0, 0] = old.state[1, :, 2]
+        # L recoit la ligne du haut de U dans sa colonne de gauche
+        self.state[4, :, 0] = old.state[0, 0][::-1]
+        # D recoit la colonne de gauche de L dans sa ligne du bas
+        self.state[3, 2] = old.state[4, :, 0]
+        # R recoit la ligne du bas de D dans sa colonne de gauche
+        self.state[1, :, 2] = old.state[3, 2][::-1]
