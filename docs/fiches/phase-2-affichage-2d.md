@@ -148,9 +148,9 @@ pygame.quit()
 pygame ne dessine pas du texte directement : il fabrique d'abord une **image** du texte, puis on la colle sur l'écran avec `blit`.
 
 ```python
-font = pygame.font.Font(None, 36) # None = police par défaut, taille 36
-image = font.render("Bonjour !", True, (255, 255, 0)) # texte, lissage, couleur
-screen.blit(image, (20, 20)) # colle l'image avec son coin haut gauche en (20, 20)
+font = pygame.font.Font(None, 36)  # None = police par défaut, taille 36
+image = font.render("Bonjour !", True, (255, 255, 0))  # texte, lissage, couleur
+screen.blit(image, (20, 20))  # colle l'image avec son coin haut gauche en (20, 20)
 ```
 
 Crée la police **une seule fois**, avant la boucle : la recréer à chaque image ralentit le programme pour rien. `render` et `blit`, eux, se font à chaque image, entre `fill` et `flip`.
