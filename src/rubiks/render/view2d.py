@@ -118,8 +118,16 @@ def run(cube: Cube | None = None) -> None:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                else:
+                    # KEYDOWN arrive une seule fois par appui : un appui = un coup
+                    key_name = pygame.key.name(event.key)
+                    shift = bool(event.mod & pygame.KMOD_SHIFT) # & et pas ==
+                    move = key_to_move(key_name, shift)
+                    if move is not None:
+                        cube.move(move)
 
         # 2. Dessiner : fond uni, puis le patron du cube
         screen.fill(BACKGROUND_COLOR)
