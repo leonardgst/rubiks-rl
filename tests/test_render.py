@@ -1,16 +1,19 @@
-"""Tests de la séparation entre la logique du cube et l'affichage."""
+"""Tests de la séparation entre la logique (cube, règles du jeu) et l'affichage."""
 
 import subprocess
 import sys
 
+import pytest
 
-def test_importing_cube_does_not_load_pygame():
-    """Importer le cube ne doit pas charger pygame.
+
+@pytest.mark.parametrize("module", ["rubiks.cube", "rubiks.game"])
+def test_logic_modules_do_not_load_pygame(module):
+    """Importer le cube ou les règles du jeu ne doit pas charger pygame.
 
     Le test lance un Python neuf (dans lequel rien n'est encore importé), y
-    importe rubiks.cube, puis regarde si pygame fait partie des modules chargés.
+    importe le module, puis regarde si pygame fait partie des modules chargés.
     """
-    code = "import sys, rubiks.cube; print('pygame' in sys.modules)"
+    code = f"import sys, {module}; print('pygame' in sys.modules)"
 
     result = subprocess.run(
         [sys.executable, "-c", code], capture_output=True, text=True, check=True

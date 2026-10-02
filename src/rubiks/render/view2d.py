@@ -3,24 +3,25 @@
 La fenêtre montre le patron déplié en croix, avec la même orientation que la
 docstring de ``cube.py`` et que ``print(cube)`` :
 
-U
+U Résolu !
 L F R B
-D
+D Coups : 3
+Mélange : ...
+aide (touches)
 
 Le patron tient dans une grille de 12 colonnes x 9 lignes de cases. Chaque face
 occupe un carré de 3 x 3 cases, qui commence à un décalage qui lui est propre
-(``FACE_OFFSETS``).
+(``FACE_OFFSETS``). Sous le patron, une bande de texte.
 
-Clavier : U D L R F B = quart de tour horaire, Maj + lettre = inverse
-Echap = quitter
-
-L'affichage LIT ``cube.state`` ; il ne le modifie jamais. Ce module importe
-pygame : il ne doit jamais être importé par ``cube.py``.
+Ce que fait chaque touche est décidé par ``rubiks.game`` ; ce module ne fait
+que transmettre les touches et dessiner. Il importe pygame : il ne doit jamais
+être importé par ``cube.py`` ni par ``game.py``.
 """
 
 import pygame
 
 from rubiks.cube import Cube
+from rubiks.game import Game
 
 # --- Dimensions -----------------------------------------------------------
 STICKER_SIZE = 40  # côté d'une case du patron, en pixels
@@ -28,14 +29,30 @@ STICKER_GAP = 3  # espace entre deux cases, en pixels
 MARGIN = 20  # marge autour du patron, en pixels
 GRID_COLUMNS = 12  # largeur du patron, en cases (4 faces côte à côte)
 GRID_ROWS = 9  # hauteur du patron, en cases (3 faces l'une sous l'autre)
+TEXT_AREA_HEIGHT = 140  # bande de texte sous le patron, en pixels
+LINE_HEIGHT = 24  # hauteur d'une ligne de texte, en pixels
+MOVES_PER_LINE = 12  # coups du mélange affichés par ligne
 
+PATTERN_HEIGHT = 2 * MARGIN + GRID_ROWS * STICKER_SIZE
 WINDOW_WIDTH = 2 * MARGIN + GRID_COLUMNS * STICKER_SIZE
-WINDOW_HEIGHT = 2 * MARGIN + GRID_ROWS * STICKER_SIZE
+WINDOW_HEIGHT = PATTERN_HEIGHT + TEXT_AREA_HEIGHT
 WINDOW_TITLE = "Rubik's Cube"
 FPS = 60  # nombre maximum d'images par seconde
 
+# --- Textes ------------------------------------------------------------------
+TEXT_SIZE = 24  # taille de la police des textes courants
+WIN_TEXT_SIZE = 56  # taille du message « Résolu ! »
+HELP_LINES = (
+    "U D L R F B : tourner Maj + lettre : sens inverse",
+    "Espace : mélanger Retour arrière : recommencer",
+    "Échap : quitter",
+)
+
 # --- Couleurs (rouge, vert, bleu), de 0 à 255 --------------------------------
 BACKGROUND_COLOR = (30, 30, 30)  # gris foncé
+TEXT_COLOR = (230, 230, 230)  # gris très clair
+HELP_COLOR = (150, 150, 150)  # gris moyen
+WIN_COLOR = (90, 220, 120)  # vert clair
 # COLORS[i] = couleur de la face i du cube résolu (ordre U R F D L B de cube.py)
 COLORS = (
     (255, 255, 255),  # 0 U : blanc
@@ -58,22 +75,6 @@ FACE_OFFSETS = {
     5: (9, 3),  # B : à droite de R
 }
 
-# --- Clavier ------------------------------------------------------------------
-# Nom de la touche (tel que le donne pygame.key.name, toujours en minuscule)
-# -> face du cube
-KEY_TO_FACE = {"u": "U", "d": "D", "l": "L", "r": "R", "f": "F", "b": "B"}
-
-
-def key_to_move(key_name: str, shift: bool) -> str | None:
-    """Renvoie le mouvement d'une touche, ou None si elle n'en est pas un.
-
-    "u" donne "U" ; avec Maj, "U'" (l'inverse). Une autre touche donne None.
-    """
-    face = KEY_TO_FACE.get(key_name)
-    if face is None:
-        return None
-    return face + "'" if shift else face
-
 
 def sticker_position(face: int, row: int, col: int) -> tuple[int, int]:
     """Renvoie (x, y), en pixels, du coin haut gauche de la case (face, row, col).
@@ -87,6 +88,20 @@ def sticker_position(face: int, row: int, col: int) -> tuple[int, int]:
     return x, y
 
 
+def scramble_lines(moves: list[str]) -> list[str]:
+    """Découpe la suite du mélange en lignes de MOVES_PER_LINE coups au plus.
+
+    La première ligne commence par « Mélange : ». Sans mélange : aucune ligne.
+    """
+    if not moves:
+        return []
+    chunks = [
+        " ".join(moves[i : i + MOVES_PER_LINE])
+        for i in range(0, len(moves), MOVES_PER_LINE)
+    ]
+    return ["Mélange : " + chunks[0]] + chunks[1:]
+
+
 def draw_cube(screen: pygame.Surface, cube: Cube) -> None:
     """Dessine les 54 cases du cube, en lisant ``cube.state``."""
     side = STICKER_SIZE - STICKER_GAP  # case un peu plus petite que la grille
@@ -98,23 +113,55 @@ def draw_cube(screen: pygame.Surface, cube: Cube) -> None:
                 pygame.draw.rect(screen, color, (x, y, side, side))
 
 
-def run(cube: Cube | None = None) -> None:
-    """Ouvre la fenêtre et affiche le cube jusqu'à la fermeture.
+def draw_texts(
+    screen: pygame.Surface,
+    game: Game,
+    font: pygame.font.Font,
+    win_font: pygame.font.Font,
+) -> None:
+    """Dessine les textes : « Résolu ! », coups joués, mélange et aide."""
+    # Coin en haut à droite du patron (vide) : le message de victoire
+    if game.is_won():
+        image = win_font.render("Résolu !", True, WIN_COLOR)
+        x, y = sticker_position(1, 0, 0)  # au-dessus de la face R
+        screen.blit(image, (x, MARGIN + STICKER_SIZE))
 
-    Sans argument, on affiche un cube neuf (résolu). On peut aussi passer un
-    cube déjà mélangé, par exemple pour vérifier le dessin.
+    # Coin en bas à droite du patron (vide) : le nombre de coups depuis le mélange
+    if game.scramble_moves:
+        image = font.render(f"Coups : {game.moves_played}", True, TEXT_COLOR)
+        x, _ = sticker_position(1, 0, 0)  # aligné sur la face R
+        _, y = sticker_position(3, 0, 0)  # à la hauteur de la face D
+        screen.blit(image, (x + STICKER_GAP * 3, y + STICKER_GAP * 3))
+
+    # Bande sous le patron : la suite du mélange, puis l'aide
+    y = PATTERN_HEIGHT - MARGIN // 2
+    for line in scramble_lines(game.scramble_moves):
+        screen.blit(font.render(line, True, TEXT_COLOR), (MARGIN, y))
+        y += LINE_HEIGHT
+    y = WINDOW_HEIGHT - MARGIN // 2 - LINE_HEIGHT * len(HELP_LINES)
+    for line in HELP_LINES:
+        screen.blit(font.render(line, True, HELP_COLOR), (MARGIN, y))
+        y += LINE_HEIGHT
+
+
+def run(cube: Cube | None = None) -> None:
+    """Ouvre la fenêtre et fait tourner le jeu jusqu'à la fermeture.
+
+    Sans argument, la partie commence avec un cube neuf (résolu). On peut aussi
+    passer un cube déjà mélangé, par exemple pour vérifier le dessin.
     """
-    if cube is None:
-        cube = Cube()
+    game = Game(cube)
 
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pygame.display.set_caption(WINDOW_TITLE)
     clock = pygame.time.Clock()
+    font = pygame.font.Font(None, TEXT_SIZE)  # créées une seule fois,
+    win_font = pygame.font.Font(None, WIN_TEXT_SIZE)  # avant la boucle
 
     running = True
     while running:
-        # 1. Lire les événements : croix de la fenêtre ou touche Échap
+        # 1. Lire les événements : fermeture, sinon la touche va au jeu
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -124,14 +171,13 @@ def run(cube: Cube | None = None) -> None:
                 else:
                     # KEYDOWN arrive une seule fois par appui : un appui = un coup
                     key_name = pygame.key.name(event.key)
-                    shift = bool(event.mod & pygame.KMOD_SHIFT) # & et pas ==
-                    move = key_to_move(key_name, shift)
-                    if move is not None:
-                        cube.move(move)
+                    shift = bool(event.mod & pygame.KMOD_SHIFT)  # & et pas ==
+                    game.press(key_name, shift)
 
-        # 2. Dessiner : fond uni, puis le patron du cube
+        # 2. Dessiner : fond uni, patron, textes
         screen.fill(BACKGROUND_COLOR)
-        draw_cube(screen, cube)
+        draw_cube(screen, game.cube)
+        draw_texts(screen, game, font, win_font)
 
         # 3. Afficher l'image dessinée
         pygame.display.flip()
