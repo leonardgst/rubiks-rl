@@ -47,7 +47,6 @@ Pour garder l'état d'origine, on utilise ``copy()``, qui fabrique un cube
 indépendant (le tableau numpy est copié, pas partagé).
 """
 
-
 import random
 
 import numpy as np

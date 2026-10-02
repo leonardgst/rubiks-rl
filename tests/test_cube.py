@@ -8,7 +8,7 @@ La façon de tourner les faces (np.rot90, tranches...) n'existe que dans cube.py
 import numpy as np
 import pytest
 
-from rubiks.cube import Cube
+from rubiks.cube import MOVES, Cube
 
 FACES = ["U", "R", "F", "D", "L", "B"]
 
@@ -392,7 +392,8 @@ def test_opposite_faces_commute(first_face, second_face):
 
 
 def test_apply_is_equivalent_to_individual_moves():
-    """Vérifie si la fonction apply et une suite de fonction move renvoient le même cube."""
+    """Vérifie si la fonction apply et une suite de
+    fonction move renvoient le même cube."""
     first_cube = numbered_cube()
     second_cube = numbered_cube()
 
@@ -422,3 +423,151 @@ def test_apply_unknown_move_raises_value_error():
 
     with pytest.raises(ValueError):
         cube.apply("R U X F")
+
+
+@pytest.mark.parametrize("n", [0, 1, 5, 100])
+def test_scramble_returns_n_moves(n):
+    """scramble(n) renvoie une liste d'exactement n mouvements (même pour n = 0)."""
+    cube = Cube()
+
+    moves_played = cube.scramble(n, seed=0)
+
+    assert len(moves_played) == n
+
+
+def test_scramble_returns_only_valid_moves():
+    """Tous les mouvements renvoyés font partie des 18 mouvements de MOVES."""
+    cube = Cube()
+
+    moves_played = cube.scramble(200, seed=0)
+
+    assert all(move in MOVES for move in moves_played)
+
+
+def test_scramble_same_seed_gives_same_moves():
+    """Même graine, même mélange : mêmes mouvements et même état final.
+
+    On part du cube numéroté pour comparer l'état case par case.
+    """
+    first_cube = numbered_cube()
+    second_cube = numbered_cube()
+
+    first_moves = first_cube.scramble(30, seed=42)
+    second_moves = second_cube.scramble(30, seed=42)
+
+    assert first_moves == second_moves  # deux listes se comparent avec ==
+    assert np.array_equal(first_cube.state, second_cube.state)  # pas deux tableaux
+
+
+def test_scramble_different_seeds_give_different_moves():
+    """Deux graines différentes donnent deux mélanges différents.
+
+    Les graines sont fixées : le résultat est toujours le même, le test n'est pas
+    aléatoire. Sur 30 coups, deux suites identiques par hasard : 1 chance sur 18**30.
+    """
+    first_moves = Cube().scramble(30, seed=1)
+    second_moves = Cube().scramble(30, seed=2)
+
+    assert first_moves != second_moves
+
+
+@pytest.mark.parametrize("color", range(6))
+def test_scramble_keeps_each_color_nine_times(color):
+    """Après un long mélange, chaque couleur apparaît toujours exactement 9 fois.
+
+    Un mouvement qui dupliquerait une bande (piège des vues numpy) casserait ce
+    compte.
+    """
+    cube = Cube()
+
+    cube.scramble(100, seed=0)
+
+    assert (cube.state == color).sum() == 9
+
+
+def test_scramble_returns_the_moves_it_played():
+    """La liste renvoyée est fidèle : la rejouer sur un cube identique donne le
+    même état que le cube mélangé.
+
+    apply attend une chaîne : on rassemble la liste avec " ".join(...).
+    """
+    scrambled_cube = numbered_cube()
+    replayed_cube = numbered_cube()
+
+    moves_played = scrambled_cube.scramble(30, seed=7)
+    replayed_cube.apply(" ".join(moves_played))
+
+    assert np.array_equal(scrambled_cube.state, replayed_cube.state)
+
+
+# --------------------------------------------------------------------------
+# mélange puis suite inverse
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("seed", range(5))
+@pytest.mark.parametrize("n", [1, 20, 100])
+def test_scramble_then_inverse_sequence_solves_cube(n, seed):
+    """Mélanger, puis appliquer la suite inverse au MÊME cube, le résout.
+
+    On vérifie aussi que le mélange a bien désordonné le cube : sinon le test
+    passerait même si scramble ne faisait rien.
+    """
+    cube = Cube()
+
+    moves_played = cube.scramble(n, seed=seed)
+    assert not cube.is_solved()
+
+    cube.apply(" ".join(cube.inverse_sequence(moves_played)))
+
+    assert cube.is_solved()
+
+
+@pytest.mark.parametrize("seed", range(5))
+def test_scramble_then_inverse_sequence_restores_numbered_cube(seed):
+    """Version stricte : sur le cube numéroté, chaque case retrouve sa place.
+
+    Attention : is_solved() vaut toujours False sur un cube numéroté (ses faces
+    ne sont jamais unies). On compare donc à l'état de départ gardé de côté.
+    """
+    cube = numbered_cube()
+    initial_state = cube.state.copy()
+
+    moves_played = cube.scramble(50, seed=seed)
+    cube.apply(" ".join(cube.inverse_sequence(moves_played)))
+
+    assert np.array_equal(cube.state, initial_state)
+
+
+# --------------------------------------------------------------------------
+# inverse_sequence seule
+# --------------------------------------------------------------------------
+
+
+def test_inverse_sequence_reverses_order_and_inverts_each_move():
+    """La suite inverse se lit à l'envers, chaque mouvement étant inversé.
+
+    Principe de la chaussette et de la chaussure : pour défaire "R puis U' puis
+    F2", on défait d'abord F2 (son propre inverse), puis U' (donc U), puis R
+    (donc R').
+    """
+    cube = Cube()
+
+    assert cube.inverse_sequence(["R", "U'", "F2"]) == ["F2", "U", "R'"]
+
+
+def test_inverse_sequence_of_empty_list_is_empty():
+    """L'inverse d'une suite vide est une suite vide."""
+    cube = Cube()
+
+    assert cube.inverse_sequence([]) == []
+
+
+def test_inverse_of_inverse_sequence_is_original():
+    """Inverser deux fois une suite redonne la suite de départ."""
+    cube = Cube()
+    moves = ["U", "R'", "F2", "D", "L'", "B2"]
+
+    twice_inverted = cube.inverse_sequence(cube.inverse_sequence(moves))
+
+    assert twice_inverted == moves
