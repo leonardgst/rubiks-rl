@@ -279,7 +279,7 @@ Les notions Git sont introduites progressivement : les bases en phase 0, les bra
 | Décision | Quand | Options |
 |---|---|---|
 | Bibliothèque 3D | Début phase 3 | `ursina` (simple) ou `pygame` + `PyOpenGL` (formateur mais exigeant) |
-| Affichage 2D | Début phase 2 | Terminal coloré ou fenêtre `pygame` |
+| Affichage 2D - Décidé: `pygame` | 2026-10-02 | Terminal coloré ou fenêtre `pygame` |
 | Représentation de l'état pour le RL | Phase 4 | 54 cases colorées (simple) ou positions/orientations des cubies (compact) |
 | Version de PyTorch (CPU ou GPU) | Début phase 4 | Version par défaut de PyPI, ou index PyTorch dédié (CPU seul, CUDA…) déclaré dans `pyproject.toml` — voir `docs/cours/uv.md` |
 | Métrique de coups | Phase 7 | Demi-tour compte pour 1 coup (HTM) ou 2 (QTM) |
