@@ -151,6 +151,8 @@ Chaque phase = une branche Git principale (voire plusieurs sous-branches) + une 
   - chaque couleur apparaît toujours exactement 9 fois.
 - **Terminé quand :** tous les tests passent. Tag `v0.1.0`.
 
+**Phase 1 terminée - 2026/10/02**
+
 ### Phase 2 — Affichage 2D et contrôle clavier
 
 - **Objectif :** jouer au cube dans une fenêtre simple (patron déplié en croix).
