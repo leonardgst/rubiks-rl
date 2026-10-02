@@ -161,6 +161,8 @@ Chaque phase = une branche Git principale (voire plusieurs sous-branches) + une 
 - **Livrables :** touches U/D/L/R/F/B (+ Maj pour l'inverse), touche de mélange, touche de réinitialisation, message « Résolu ! ».
 - **Terminé quand :** je peux mélanger puis refaire le cube au clavier. Tag `v0.2.0`.
 
+**Phase 2 terminée - 2026/10/02**
+
 ### Phase 3 — Vue 3D manipulable
 
 - **Objectif :** le même jeu, mais en 3D.
@@ -351,9 +353,9 @@ Ce que j'aurai à la fin, en une ou deux phrases.
 
 | Phase | Statut | Tag | Date de fin |
 |---|---|---|---|
-| 0 — Mise en place | À faire | — | — |
-| 1 — Cube logique | À faire | v0.1.0 | — |
-| 2 — Affichage 2D | À faire | v0.2.0 | — |
+| 0 — Mise en place | Fait | — | 30/09/2026 |
+| 1 — Cube logique | Fait | v0.1.0 | 02/10/2026 |
+| 2 — Affichage 2D | Fait | v0.2.0 | 02/10/2026 |
 | 3 — Vue 3D | À faire | v1.0.0 | — |
 | 4 — Cours RL + environnement | À faire | — | — |
 | 5 — Premier agent | À faire | — | — |

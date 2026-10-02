@@ -4,7 +4,7 @@ Un Rubik's Cube 3x3 recréé en Python, jouable au clavier dans une vue 3D manip
 
 C'est un projet d'apprentissage : il sert à pratiquer Python, Git et le reinforcement learning, étape par étape. Le plan complet est décrit dans le [document de cadrage](docs/cadrage.md).
 
-> **Avancement :** phase 1, le cube a été codé (voir classe Cube dans src/rubiks/cube.py). On peut y faire tous les mouvements (U -> 1/4 tour dans le sens horaire, U' -> 1/4 de tour dans le sens anti-horaire, U2 -> un demi-tour) pour toutes les faces.
+> **Avancement :** phase 2 : On peut lancer une fenêtre pygame, jouer sur un rubiks cube en 2d avec le clavier, et si on devine les mouvements inverses du mélange, on peut réussir le jeu!
 
 ## Installation
 
