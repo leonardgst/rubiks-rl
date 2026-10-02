@@ -98,7 +98,7 @@ def test_copy_is_independent(face):
 
     assert np.array_equal(cube.state, cube_copy.state)
 
-    cube_copy.state[0, 0, 0] == 99
+    cube_copy.state[0, 0, 0] = 99
 
     assert cube.state[0, 0, 0] == 0
 
@@ -166,10 +166,10 @@ def test_quarter_turn_D_from_solved_cube():
     assert (cube.state[5, 2] == 1).sum() == 3  # B : rouge
 
     # Ce qui ne doit pas bouger : le milieu et le haut des 4 faces, et toute la face U
-    assert np.all(cube.state[1, :1] == 1)
-    assert np.all(cube.state[2, :1] == 2)
-    assert np.all(cube.state[4, :1] == 4)
-    assert np.all(cube.state[5, :1] == 5)
+    assert np.all(cube.state[1, :2] == 1)
+    assert np.all(cube.state[2, :2] == 2)
+    assert np.all(cube.state[4, :2] == 4)
+    assert np.all(cube.state[5, :2] == 5)
     assert np.all(cube.state[0] == 0)
 
 
