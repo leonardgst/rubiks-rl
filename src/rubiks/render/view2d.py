@@ -11,6 +11,9 @@ Le patron tient dans une grille de 12 colonnes x 9 lignes de cases. Chaque face
 occupe un carré de 3 x 3 cases, qui commence à un décalage qui lui est propre
 (``FACE_OFFSETS``).
 
+Clavier : U D L R F B = quart de tour horaire, Maj + lettre = inverse
+Echap = quitter
+
 L'affichage LIT ``cube.state`` ; il ne le modifie jamais. Ce module importe
 pygame : il ne doit jamais être importé par ``cube.py``.
 """
@@ -54,6 +57,22 @@ FACE_OFFSETS = {
     4: (0, 3),  # L : à gauche de F
     5: (9, 3),  # B : à droite de R
 }
+
+# --- Clavier ------------------------------------------------------------------
+# Nom de la touche (tel que le donne pygame.key.name, toujours en minuscule)
+# -> face du cube
+KEY_TO_FACE = {"u": "U", "d": "D", "l": "L", "r": "R", "f": "F", "b": "B"}
+
+
+def key_to_move(key_name: str, shift: bool) -> str | None:
+    """Renvoie le mouvement d'une touche, ou None si elle n'en est pas un.
+
+    "u" donne "U" ; avec Maj, "U'" (l'inverse). Une autre touche donne None.
+    """
+    face = KEY_TO_FACE.get(key_name)
+    if face is None:
+        return None
+    return face + "'" if shift else face
 
 
 def sticker_position(face: int, row: int, col: int) -> tuple[int, int]:
