@@ -1,4 +1,4 @@
-# rubiks-rl
+git branch# rubiks-rl
 
 Un Rubik's Cube 3x3 recréé en Python, jouable au clavier dans une vue 3D manipulable à la souris, puis résolu par un agent de **reinforcement learning** (apprentissage par renforcement).
 

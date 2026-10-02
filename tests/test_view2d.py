@@ -6,11 +6,13 @@ Aucun de ces tests n'ouvre de fenêtre : ils ne testent que des calculs
 
 import pytest
 
+from rubiks.cube import MOVES
 from rubiks.render.view2d import (
     COLORS,
     STICKER_SIZE,
     WINDOW_HEIGHT,
     WINDOW_WIDTH,
+    key_to_move,
     sticker_position,
 )
 
@@ -71,3 +73,37 @@ def test_neighbouring_stickers_touch(first, second, dx, dy):
     x2, y2 = sticker_position(*second)
 
     assert (x2 - x1, y2 - y1) == (dx * STICKER_SIZE, dy * STICKER_SIZE)
+
+
+# ------------------------------------------------------------------------
+# clavier
+# ------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("face", ["U", "D", "L", "R", "F", "B"])
+def test_letter_key_gives_clockwise_move(face):
+    """La touche d'une face (en minuscule, comme pygame la nomme) donne son
+    quart de tour horaire."""
+    assert key_to_move(face.lower(), shift=False) == face
+
+
+@pytest.mark.parametrize("face", ["U", "D", "L", "R", "F", "B"])
+def test_shift_letter_key_gives_inverse_move(face):
+    """Avec Maj, la même touche donne le mouvement inverse."""
+    assert key_to_move(face.lower(), shift=True) == face + "'"
+
+
+@pytest.mark.parametrize("shift", [False, True])
+@pytest.mark.parametrize(
+    "key_name", ["x", "a", "space", "escape", "backspace", "return", "1", ""]
+)
+def test_other_keys_give_no_move(key_name, shift):
+    """Une touche qui n'est pas une face ne donne aucun mouvement."""
+    assert key_to_move(key_name, shift) is None
+
+
+@pytest.mark.parametrize("key_name", list("udlrfb"))
+@pytest.mark.parametrize("shift", [False, True])
+def test_every_key_move_is_a_valid_move(key_name, shift):
+    """Chaque mouvement donné par le clavier fait partie des 18 de cube.py."""
+    assert key_to_move(key_name, shift) in MOVES
