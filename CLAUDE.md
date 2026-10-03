@@ -25,12 +25,22 @@ Projet **pédagogique** : recréer un Rubik's Cube 3x3 en Python (vue 3D manipul
 
 ## Architecture
 
-- `src/rubiks/cube.py` : logique pure du cube (état = 54 cases, mouvements, mélange, `is_solved`). **Aucune dépendance à l'affichage.**
-- `src/rubiks/render/` : affichage 2D et 3D, qui utilisent `Cube`.
-- `src/rubiks/rl/` : environnement Gymnasium, agents, entraînement, évaluation.
-- `tests/` : tests pytest. Toute modification des mouvements doit garder les tests verts.
-- Environnement géré par **uv** : `pyproject.toml` (dépendances + groupe `dev`), `uv.lock` (versions exactes, commité), `.python-version` (3.12), `.venv/` (généré, jamais commité). Voir `docs/cours/uv.md`.
-- Notation Singmaster : U D L R F B, `'` = inverse, `2` = demi-tour → 18 actions.
+Logique pure (**aucune dépendance à l'affichage**, vérifié par `tests/test_render.py`) :
+
+- `src/rubiks/moves.py` : notation (18 mouvements de faces `MOVES`, tranches M E S, rotations x y z), inverse, simplification.
+- `src/rubiks/scramble.py` : mélanges aléatoires (jamais deux coups de suite sur la même face).
+- `src/rubiks/geometry.py` : géométrie 3D (cubies, normales, rotations, permutations, glisser à la souris).
+- `src/rubiks/cube.py` : la classe `Cube` (état `(6, 3, 3)`, `move`, `apply`, `scramble`, `is_solved`, `copy`, `==`, `facelets`). Les quarts de tour écrits à la main en phase 1 servent de référence ; `move` utilise les permutations `PERMUTATIONS` (≈ 1 µs par coup).
+- `src/rubiks/game.py` : règles du jeu (touches → `Command`, `Game` : partie, chrono, annulation, solution ; `Player` : file d'attente animée « jouer, animer, repeindre »).
+
+Affichages (`src/rubiks/render/`) : `colors.py` (partagé), `view2d.py` (pygame), `view3d.py` (ursina, le jeu), `scene.py` + `view3d_pygame.py` (3D « à la main »), `terminal.py` (ANSI).
+
+À venir : `src/rubiks/rl/` (environnement Gymnasium, agents, entraînement, évaluation).
+
+- `tests/` : tests pytest (fixtures dans `tests/conftest.py`). Toute modification des mouvements doit garder les tests verts, en particulier `tests/test_geometry.py`.
+- Environnement géré par **uv** : `pyproject.toml` (dépendances + groupe `dev` + commandes), `uv.lock` (versions exactes, commité), `.python-version` (3.12), `.venv/` (généré, jamais commité). Voir `docs/cours/uv.md`.
+- Notation Singmaster : U D L R F B, `'` = inverse, `2` = demi-tour → **18 actions** pour le RL (`moves.MOVES`). Les tranches et rotations existent pour le jeu, pas pour l'agent.
+- CI : `.github/workflows/tests.yml` (uv lock --check, ruff, pytest) à chaque push et PR.
 
 ## Commandes
 
@@ -40,7 +50,9 @@ uv sync                          # crée/met à jour .venv (Python 3.12 inclus) 
 uv run pytest                    # tests
 uv run ruff check .              # linter
 uv run ruff format .             # formatage
+uv lock --check                  # uv.lock est-il à jour ?
 uv add <paquet>                  # nouvelle dépendance (uv add --dev <outil> pour un outil de dev)
+uv run rubiks                    # le jeu 3D (rubiks-2d, rubiks-3d-pygame, rubiks-terminal)
 ```
 
 ## Conventions
@@ -52,4 +64,6 @@ uv add <paquet>                  # nouvelle dépendance (uv add --dev <outil> po
 
 ## Phase en cours
 
-Phase 3
+Phase 4 — cours de RL et environnement Gymnasium.
+
+Note : la phase 3 (et les bonus des phases 0 à 3) a été codée par Claude, à ma demande explicite, pour passer plus vite au RL. Pour la suite, les règles pédagogiques ci-dessus s'appliquent de nouveau normalement : c'est moi qui code le RL.

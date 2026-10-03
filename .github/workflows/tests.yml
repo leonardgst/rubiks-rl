@@ -1,0 +1,35 @@
+# Vérifications automatiques, sur GitHub, à chaque push et chaque Pull Request.
+# Résultat : onglet « Actions » du dépôt, et une coche verte (ou une croix
+# rouge) à côté de chaque commit et dans chaque PR.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v5
+
+      - name: Installer uv
+        # Épinglé sur un commit précis (recommandé par setup-uv) : v10.1.0
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4
+
+      - name: uv.lock est-il à jour ?
+        run: uv lock --check
+
+      - name: Installer le projet (Python 3.12 et dépendances exactes)
+        run: uv sync --locked
+
+      - name: Linter
+        run: uv run ruff check .
+
+      - name: Formatage
+        run: uv run ruff format --check .
+
+      - name: Tests
+        run: uv run pytest

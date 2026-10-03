@@ -1,7 +1,7 @@
 # Document de cadrage — Rubik's Cube & Reinforcement Learning
 
-> **Statut :** v1.1 — document vivant, à mettre à jour à la fin de chaque phase.
-> **Historique :** v1.1 (28/09/2026) — `uv` remplace `venv` + `pip` dès la phase 0.
+> **Statut :** v1.2 — document vivant, à mettre à jour à la fin de chaque phase.
+> **Historique :** v1.1 (28/09/2026) — `uv` remplace `venv` + `pip` dès la phase 0. v1.2 (02/10/2026) — phase 3 terminée (codée par Claude, à ma demande, pour passer plus vite au RL), `ursina` retenu pour la 3D, tous les « pour aller plus loin » des phases 0 à 3 intégrés (voir `docs/fiches/bilan-v1.md`).
 > **Emplacement dans le repo :** `docs/cadrage.md`
 
 ---
@@ -57,7 +57,7 @@ Chaque choix est justifié simplement. Ils peuvent être rediscutés au début d
 | Tests | `pytest` | Vérifier automatiquement que les mouvements sont corrects |
 | Qualité du code | `ruff` | Un seul outil pour le style et les erreurs courantes |
 | Affichage 2D | Terminal (couleurs) ou `pygame` | Voir le cube vite, sans la complexité de la 3D |
-| Affichage 3D | **À décider en phase 3** : `ursina` (simple, souris/clavier intégrés) ou `pygame` + `PyOpenGL` (plus formateur, plus dur) | Voir section 9 |
+| Affichage 3D | **Décidé (phase 3) : `ursina`** (simple, souris/clavier intégrés). En bonus, une 3D « à la main » avec `pygame` seul (projection, tri des faces) remplace l'option `PyOpenGL` | Voir section 9 |
 | RL | `PyTorch` + `gymnasium` | Standards du domaine, très bien documentés |
 | Solveur de référence | `kociemba` (bibliothèque) | Point de comparaison : un solveur classique qui trouve ~20 coups |
 
@@ -96,31 +96,40 @@ Elle se construira petit à petit, phase par phase.
 ```
 rubiks-rl/
 ├── README.md               # présentation du projet
+├── LICENSE                 # licence MIT
 ├── CLAUDE.md               # instructions pour Claude Code
-├── pyproject.toml          # description du projet, dépendances, config (pytest, ruff)
+├── pyproject.toml          # description du projet, dépendances, commandes, config (pytest, ruff)
 ├── uv.lock                 # versions exactes des dépendances (généré par uv, commité)
 ├── .python-version         # version de Python du projet (3.12)
 ├── .gitignore
+├── .github/workflows/      # vérifications automatiques sur GitHub (tests, ruff, uv.lock)
 ├── .venv/                  # environnement virtuel (généré par uv, ignoré par git)
 ├── docs/
 │   ├── cadrage.md          # ce document
-│   ├── fiches/             # fiches récap, une par étape
-│   └── cours/              # cours (uv, RL…)
+│   ├── fiches/             # fiches récap, une par étape, et bilans
+│   ├── cours/              # cours (uv, RL…)
+│   └── images/             # captures d'écran du README
 ├── src/
 │   └── rubiks/
-│       ├── __init__.py     # créé par `uv init`
-│       ├── cube.py         # classe Cube : état, mouvements, is_solved
-│       ├── moves.py        # définition des 18 mouvements
+│       ├── __init__.py     # les commandes uv run rubiks…
+│       ├── moves.py        # notation : 18 mouvements, tranches, rotations
 │       ├── scramble.py     # mélanges aléatoires
+│       ├── geometry.py     # géométrie 3D (cubies, rotations, permutations)
+│       ├── cube.py         # classe Cube : état, mouvements, is_solved
+│       ├── game.py         # règles du jeu (touches, partie, chrono, animation)
 │       ├── render/
-│       │   ├── view2d.py   # patron déplié
-│       │   └── view3d.py   # vue 3D manipulable
-│       └── rl/
+│       │   ├── colors.py   # couleurs et textes partagés
+│       │   ├── view2d.py   # patron déplié (pygame)
+│       │   ├── view3d.py   # vue 3D manipulable (ursina)
+│       │   ├── scene.py    # 3D « à la main » : calculs
+│       │   ├── view3d_pygame.py  # 3D « à la main » : dessin (pygame)
+│       │   └── terminal.py # affichage dans le terminal
+│       └── rl/             # (phase 4)
 │           ├── env.py      # environnement Gymnasium
 │           ├── agents/     # un fichier par algorithme
 │           ├── train.py    # entraînement
 │           └── evaluate.py # mesures de performance
-├── tests/                  # tests pytest
+├── tests/                  # tests pytest (+ conftest.py : fixtures partagées)
 └── models/                 # modèles entraînés (ignoré par git)
 ```
 
@@ -170,6 +179,8 @@ Chaque phase = une branche Git principale (voire plusieurs sous-branches) + une 
 - **Git :** provoquer volontairement un **conflit de merge** et apprendre à le résoudre.
 - **Livrables :** fenêtre 3D, caméra orbitale à la souris, rotations animées au clavier, synchronisation avec le `Cube` logique.
 - **Terminé quand :** le jeu 3D est jouable et reste cohérent avec les tests de la phase 1. Tag `v1.0.0` (le jeu est fini !).
+
+**Phase 3 terminée - 2026/10/02** — codée par Claude à ma demande, pour passer plus vite au RL. Le code se lit avec la fiche `docs/fiches/phase-3-vue-3d.md` (le tableau en tête dit où chaque notion se trouve) et le bilan `docs/fiches/bilan-v1.md`. L'exercice du conflit de merge reste à faire quand l'occasion se présentera.
 
 ### Phase 4 — Cours de RL et environnement
 
@@ -227,6 +238,7 @@ Chaque phase = une branche Git principale (voire plusieurs sous-branches) + une 
 - Petits commits fréquents : un commit = une idée.
 - Quand une dépendance change, `pyproject.toml` et `uv.lock` partent **ensemble, dans le même commit**. Le dossier `.venv/` n'est jamais commité.
 - Un **tag** à la fin de chaque phase (`v0.1.0`, `v0.2.0`, …).
+- Les tests, `ruff` et `uv lock --check` tournent aussi sur GitHub à chaque push et chaque Pull Request (`.github/workflows/tests.yml`) : une PR ne se merge que si la coche est verte.
 
 ### Messages de commit
 
@@ -280,9 +292,9 @@ Les notions Git sont introduites progressivement : les bases en phase 0, les bra
 
 | Décision | Quand | Options |
 |---|---|---|
-| Bibliothèque 3D | Début phase 3 | `ursina` (simple) ou `pygame` + `PyOpenGL` (formateur mais exigeant) |
+| Bibliothèque 3D - Décidé : `ursina` | 2026-10-02 | `ursina` (simple) ou `pygame` + `PyOpenGL` (formateur mais exigeant). Bonus : une 3D « à la main » en `pygame` seul |
 | Affichage 2D - Décidé: `pygame` | 2026-10-02 | Terminal coloré ou fenêtre `pygame` |
-| Représentation de l'état pour le RL | Phase 4 | 54 cases colorées (simple) ou positions/orientations des cubies (compact) |
+| Représentation de l'état pour le RL | Phase 4 | 54 cases colorées (simple, déjà rapide : un mouvement = une permutation numpy, `cube.PERMUTATIONS`) ou positions/orientations des cubies (compact) |
 | Version de PyTorch (CPU ou GPU) | Début phase 4 | Version par défaut de PyPI, ou index PyTorch dédié (CPU seul, CUDA…) déclaré dans `pyproject.toml` — voir `docs/cours/uv.md` |
 | Métrique de coups | Phase 7 | Demi-tour compte pour 1 coup (HTM) ou 2 (QTM) |
 | Matériel d'entraînement | Phase 6 | CPU local, GPU local, ou Google Colab |
@@ -356,7 +368,7 @@ Ce que j'aurai à la fin, en une ou deux phrases.
 | 0 — Mise en place | Fait | — | 30/09/2026 |
 | 1 — Cube logique | Fait | v0.1.0 | 02/10/2026 |
 | 2 — Affichage 2D | Fait | v0.2.0 | 02/10/2026 |
-| 3 — Vue 3D | À faire | v1.0.0 | — |
+| 3 — Vue 3D | Fait | v1.0.0 | 02/10/2026 |
 | 4 — Cours RL + environnement | À faire | — | — |
 | 5 — Premier agent | À faire | — | — |
 | 6 — Résolution complète | À faire | — | — |
