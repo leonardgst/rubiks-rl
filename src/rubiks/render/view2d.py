@@ -3,11 +3,12 @@
 La fenêtre montre le patron déplié en croix, avec la même orientation que la
 docstring de ``cube.py`` et que ``print(cube)`` :
 
-U Résolu !
-L F R B
-D Coups : 3
-Mélange : ...
-aide (touches)
+         U          Résolu !
+      L  F  R  B
+         D          Coups : 3
+                    0:12.4
+    Mélange : ...
+    aide (touches)
 
 Le patron tient dans une grille de 12 colonnes x 9 lignes de cases. Chaque face
 occupe un carré de 3 x 3 cases, qui commence à un décalage qui lui est propre
@@ -16,52 +17,53 @@ occupe un carré de 3 x 3 cases, qui commence à un décalage qui lui est propre
 Ce que fait chaque touche est décidé par ``rubiks.game`` ; ce module ne fait
 que transmettre les touches et dessiner. Il importe pygame : il ne doit jamais
 être importé par ``cube.py`` ni par ``game.py``.
+
+Lancer : ``uv run rubiks-2d``. F12 enregistre une capture (``capture-2d.png``).
 """
 
 import pygame
 
 from rubiks.cube import Cube
-from rubiks.game import Game
+from rubiks.game import Game, Player, key_to_command
+from rubiks.render.colors import (
+    BACKGROUND_COLOR,
+    COLORS,
+    HELP_COLOR,
+    HELP_LINES,
+    TEXT_COLOR,
+    WIN_COLOR,
+    format_time,
+    win_message,
+)
+
+__all__ = ["COLORS", "HELP_LINES", "run", "scramble_lines", "sticker_position"]
 
 # --- Dimensions -----------------------------------------------------------
-STICKER_SIZE = 40  # côté d'une case du patron, en pixels
+STICKER_SIZE = 44  # côté d'une case du patron, en pixels
 STICKER_GAP = 3  # espace entre deux cases, en pixels
 MARGIN = 20  # marge autour du patron, en pixels
 GRID_COLUMNS = 12  # largeur du patron, en cases (4 faces côte à côte)
 GRID_ROWS = 9  # hauteur du patron, en cases (3 faces l'une sous l'autre)
-TEXT_AREA_HEIGHT = 140  # bande de texte sous le patron, en pixels
 LINE_HEIGHT = 24  # hauteur d'une ligne de texte, en pixels
-MOVES_PER_LINE = 12  # coups du mélange affichés par ligne
+HELP_LINE_HEIGHT = 20  # hauteur d'une ligne d'aide, en pixels
+MOVES_PER_LINE = 13  # coups du mélange affichés par ligne
+SCRAMBLE_LINES = 2  # lignes réservées au mélange (25 coups au plus)
 
 PATTERN_HEIGHT = 2 * MARGIN + GRID_ROWS * STICKER_SIZE
+TEXT_AREA_HEIGHT = (
+    SCRAMBLE_LINES * LINE_HEIGHT + len(HELP_LINES) * HELP_LINE_HEIGHT + MARGIN
+)
 WINDOW_WIDTH = 2 * MARGIN + GRID_COLUMNS * STICKER_SIZE
 WINDOW_HEIGHT = PATTERN_HEIGHT + TEXT_AREA_HEIGHT
-WINDOW_TITLE = "Rubik's Cube"
+WINDOW_TITLE = "Rubik's Cube (2D)"
 FPS = 60  # nombre maximum d'images par seconde
+SECONDS_PER_MOVE = 0.12  # rythme de la solution, coup par coup
+SCREENSHOT_FILE = "capture-2d.png"
 
 # --- Textes ------------------------------------------------------------------
 TEXT_SIZE = 24  # taille de la police des textes courants
-WIN_TEXT_SIZE = 56  # taille du message « Résolu ! »
-HELP_LINES = (
-    "U D L R F B : tourner Maj + lettre : sens inverse",
-    "Espace : mélanger Retour arrière : recommencer",
-    "Échap : quitter",
-)
-
-# --- Couleurs (rouge, vert, bleu), de 0 à 255 --------------------------------
-BACKGROUND_COLOR = (30, 30, 30)  # gris foncé
-TEXT_COLOR = (230, 230, 230)  # gris très clair
-HELP_COLOR = (150, 150, 150)  # gris moyen
-WIN_COLOR = (90, 220, 120)  # vert clair
-# COLORS[i] = couleur de la face i du cube résolu (ordre U R F D L B de cube.py)
-COLORS = (
-    (255, 255, 255),  # 0 U : blanc
-    (200, 20, 20),  # 1 R : rouge
-    (20, 160, 60),  # 2 F : vert
-    (255, 215, 0),  # 3 D : jaune
-    (255, 120, 0),  # 4 L : orange
-    (20, 70, 200),  # 5 B : bleu
-)
+HELP_TEXT_SIZE = 20  # taille de la police de l'aide
+WIN_TEXT_SIZE = 44  # taille du message « Résolu ! »
 
 # --- Disposition du patron ---------------------------------------------------
 # FACE_OFFSETS[face] = (colonne, ligne) de la case en haut à gauche de la face,
@@ -102,6 +104,16 @@ def scramble_lines(moves: list[str]) -> list[str]:
     return ["Mélange : " + chunks[0]] + chunks[1:]
 
 
+class Fonts:
+    """Les polices, créées une seule fois (les recréer à chaque image est lent)."""
+
+    def __init__(self) -> None:
+        pygame.font.init()
+        self.text = pygame.font.Font(None, TEXT_SIZE)
+        self.help = pygame.font.Font(None, HELP_TEXT_SIZE)
+        self.win = pygame.font.Font(None, WIN_TEXT_SIZE)
+
+
 def draw_cube(screen: pygame.Surface, cube: Cube) -> None:
     """Dessine les 54 cases du cube, en lisant ``cube.state``."""
     side = STICKER_SIZE - STICKER_GAP  # case un peu plus petite que la grille
@@ -110,38 +122,43 @@ def draw_cube(screen: pygame.Surface, cube: Cube) -> None:
             for col in range(3):
                 x, y = sticker_position(face, row, col)
                 color = COLORS[cube.state[face, row, col]]
-                pygame.draw.rect(screen, color, (x, y, side, side))
+                pygame.draw.rect(screen, color, (x, y, side, side), border_radius=4)
 
 
-def draw_texts(
-    screen: pygame.Surface,
-    game: Game,
-    font: pygame.font.Font,
-    win_font: pygame.font.Font,
-) -> None:
-    """Dessine les textes : « Résolu ! », coups joués, mélange et aide."""
-    # Coin en haut à droite du patron (vide) : le message de victoire
+def draw_texts(screen: pygame.Surface, game: Game, fonts: Fonts) -> None:
+    """Dessine les textes : victoire, coups, chrono, mélange et aide."""
+    right_x, _ = sticker_position(1, 0, 0)  # les coins vides, à droite du patron
+    _, top_y = sticker_position(0, 0, 0)
+    _, bottom_y = sticker_position(3, 0, 0)
+
+    # Coin en haut à droite : le message de victoire
     if game.is_won():
-        image = win_font.render("Résolu !", True, WIN_COLOR)
-        x, y = sticker_position(1, 0, 0)  # au-dessus de la face R
-        screen.blit(image, (x, MARGIN + STICKER_SIZE))
+        image = fonts.win.render(win_message(game.assisted), True, WIN_COLOR)
+        screen.blit(image, (right_x, top_y + STICKER_SIZE))
 
-    # Coin en bas à droite du patron (vide) : le nombre de coups depuis le mélange
+    # Coin en bas à droite : coups et chrono depuis le mélange
     if game.scramble_moves:
-        image = font.render(f"Coups : {game.moves_played}", True, TEXT_COLOR)
-        x, _ = sticker_position(1, 0, 0)  # aligné sur la face R
-        _, y = sticker_position(3, 0, 0)  # à la hauteur de la face D
-        screen.blit(image, (x + STICKER_GAP * 3, y + STICKER_GAP * 3))
+        lines = [f"Coups : {game.moves_played}", format_time(game.elapsed())]
+        for i, line in enumerate(lines):
+            image = fonts.text.render(line, True, TEXT_COLOR)
+            screen.blit(image, (right_x + STICKER_GAP * 3, bottom_y + i * LINE_HEIGHT))
 
     # Bande sous le patron : la suite du mélange, puis l'aide
     y = PATTERN_HEIGHT - MARGIN // 2
     for line in scramble_lines(game.scramble_moves):
-        screen.blit(font.render(line, True, TEXT_COLOR), (MARGIN, y))
+        screen.blit(fonts.text.render(line, True, TEXT_COLOR), (MARGIN, y))
         y += LINE_HEIGHT
-    y = WINDOW_HEIGHT - MARGIN // 2 - LINE_HEIGHT * len(HELP_LINES)
+    y = WINDOW_HEIGHT - MARGIN // 2 - HELP_LINE_HEIGHT * len(HELP_LINES)
     for line in HELP_LINES:
-        screen.blit(font.render(line, True, HELP_COLOR), (MARGIN, y))
-        y += LINE_HEIGHT
+        screen.blit(fonts.help.render(line, True, HELP_COLOR), (MARGIN, y))
+        y += HELP_LINE_HEIGHT
+
+
+def draw_frame(screen: pygame.Surface, game: Game, fonts: Fonts) -> None:
+    """Dessine une image complète : fond uni, patron, textes."""
+    screen.fill(BACKGROUND_COLOR)
+    draw_cube(screen, game.cube)
+    draw_texts(screen, game, fonts)
 
 
 def run(cube: Cube | None = None) -> None:
@@ -151,35 +168,47 @@ def run(cube: Cube | None = None) -> None:
     passer un cube déjà mélangé, par exemple pour vérifier le dessin.
     """
     game = Game(cube)
+    # Pas d'animation en 2D : la file d'attente sert seulement à jouer la
+    # solution coup par coup, au lieu de tout d'un coup
+    player = Player(game, seconds_per_quarter_turn=SECONDS_PER_MOVE)
 
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pygame.display.set_caption(WINDOW_TITLE)
     clock = pygame.time.Clock()
-    font = pygame.font.Font(None, TEXT_SIZE)  # créées une seule fois,
-    win_font = pygame.font.Font(None, WIN_TEXT_SIZE)  # avant la boucle
+    fonts = Fonts()
 
     running = True
     while running:
-        # 1. Lire les événements : fermeture, sinon la touche va au jeu
+        # 1. Lire les événements : fermeture, capture, sinon la touche va au jeu
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
+                elif event.key == pygame.K_F12:
+                    pygame.image.save(screen, SCREENSHOT_FILE)
                 else:
                     # KEYDOWN arrive une seule fois par appui : un appui = un coup
                     key_name = pygame.key.name(event.key)
                     shift = bool(event.mod & pygame.KMOD_SHIFT)  # & et pas ==
-                    game.press(key_name, shift)
+                    ctrl = bool(event.mod & pygame.KMOD_CTRL)
+                    command = key_to_command(key_name, shift, ctrl)
+                    if command is None:
+                        continue
+                    # Un coup est joué tout de suite ; la solution (et ce qui est
+                    # tapé pendant qu'elle se joue) passe par la file d'attente
+                    if player.busy or command.kind == "solve":
+                        player.push(command)
+                    else:
+                        game.execute(command)
 
-        # 2. Dessiner : fond uni, patron, textes
-        screen.fill(BACKGROUND_COLOR)
-        draw_cube(screen, game.cube)
-        draw_texts(screen, game, font, win_font)
+        # 2. Faire avancer la file d'attente (en secondes : tick renvoie des ms)
+        player.update(clock.get_time() / 1000)
 
-        # 3. Afficher l'image dessinée
+        # 3. Dessiner, puis afficher
+        draw_frame(screen, game, fonts)
         pygame.display.flip()
         clock.tick(FPS)
 
