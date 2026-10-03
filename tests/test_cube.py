@@ -1,25 +1,29 @@
-"""Tests du cube logique (phase 1)
+"""Tests du cube logique (phase 1, complétés en phase 3).
 
-Ces décrivent ce que le cube doit faire, pas comment il fait :
-Ils n'utilisent que ses méthodes (move, apply, is_solved) et son attribut state.
-La façon de tourner les faces (np.rot90, tranches...) n'existe que dans cube.py
+Ces tests décrivent ce que le cube doit faire, pas comment il le fait : ils
+n'utilisent que ses méthodes (move, apply, is_solved...) et son attribut state.
+La façon de tourner les faces (np.rot90, tranches, permutations...) n'existe
+que dans cube.py.
+
+Le cube numéroté existe en deux versions : la fixture ``numbered_cube``
+(conftest.py), quand un test n'en a besoin que d'un, et la fonction
+``make_numbered_cube()``, quand il en faut deux.
 """
 
 import numpy as np
 import pytest
-
-from rubiks.cube import MOVES, Cube
+from rubiks.cube import MOVES, PERMUTATIONS, Cube, sequence_order
+from rubiks.moves import ALL_MOVES, ROTATION_MOVES, SLICE_MOVES
 
 FACES = ["U", "R", "F", "D", "L", "B"]
 
 
-def numbered_cube() -> Cube:
+def make_numbered_cube() -> Cube:
     """Renvoie un cube dont les 54 cases portent des numéros tous différents.
 
     Sur un cube résolu, une bande d'une seule couleur reste identique même
-    retournée: un bug d'ordre passerait inaperçu. Avec des numéros, chaque case
-    est reconnaissable
-    et le moindre déplacement se voit.
+    retournée : un bug d'ordre passerait inaperçu. Avec des numéros, chaque case
+    est reconnaissable et le moindre déplacement se voit.
     """
     cube = Cube()
     cube.state = np.arange(54).reshape(6, 3, 3)
@@ -28,7 +32,7 @@ def numbered_cube() -> Cube:
 
 def test_new_cube_is_solved():
     """Un cube neuf est résolu"""
-    assert Cube().is_solved()  # Applique la fonction is_solved au nouveau cube créer
+    assert Cube().is_solved()
 
 
 @pytest.mark.parametrize("color", range(6))
@@ -44,7 +48,7 @@ def test_quarter_turn_four_times_is_identity(face):
     Vérifie que quatre quarts de tour identiques
     ramènent chaque case à sa position initiale.
     """
-    cube = numbered_cube()
+    cube = make_numbered_cube()
     initial_state = cube.state.copy()
 
     for _ in range(4):
@@ -65,7 +69,7 @@ def test_move_then_inverse_is_identity(face, suffixe, inverse_suffixe):
 
     Un demi-tour est son propre inverse : X2 puis X2 ne change rien
     """
-    cube = numbered_cube()
+    cube = make_numbered_cube()
     initial_state = cube.state.copy()
 
     cube.move(face + suffixe)
@@ -77,9 +81,9 @@ def test_move_then_inverse_is_identity(face, suffixe, inverse_suffixe):
 def test_sexy_move_six_times_is_identity():
     """
     Vérifie qu'appliquer 6 fois la suite de
-    mouvement "R U R' U'" ramnène à l'état initial
+    mouvement "R U R' U'" ramène à l'état initial
     """
-    cube = numbered_cube()
+    cube = make_numbered_cube()
     initial_state = cube.state.copy()
 
     for _ in range(6):
@@ -90,10 +94,10 @@ def test_sexy_move_six_times_is_identity():
 
 @pytest.mark.parametrize("face", FACES)
 def test_copy_is_independent(face):
-    """Une copie est identique à l'originale
+    """Une copie est identique à l'original,
     mais indépendante de lui.
     """
-    cube = numbered_cube()
+    cube = make_numbered_cube()
     cube_copy = cube.copy()
 
     assert np.array_equal(cube.state, cube_copy.state)
@@ -319,7 +323,7 @@ def test_move_turns_its_face_clockwise(move, face_index):
     Le cube numéroté permet de vérifier la position exacte de chaque case,
     contrairement à un cube résolu dont chaque face est uniforme.
     """
-    cube = numbered_cube()
+    cube = make_numbered_cube()
     initial_face = cube.state[face_index].copy()
 
     cube.move(move)
@@ -337,7 +341,7 @@ def test_quarter_turn_moves_twenty_stickers(face):
     ainsi que 12 cases appartenant aux quatre faces adjacentes.
     Le cube numéroté permet de détecter chaque changement de position.
     """
-    cube = numbered_cube()
+    cube = make_numbered_cube()
     initial_state = cube.state.copy()
 
     cube.move(face)
@@ -355,7 +359,7 @@ def test_centers_never_move(face, suffix):
     Le test couvre les quarts de tour horaires, les quarts de tour
     antihoraires et les demi-tours pour chacune des six faces.
     """
-    cube = numbered_cube()
+    cube = make_numbered_cube()
     initial_centers = cube.state[:, 1, 1].copy()
 
     cube.move(face + suffix)
@@ -379,8 +383,8 @@ def test_opposite_faces_commute(first_face, second_face):
     que les appliquer dans l'ordre inverse, car deux faces opposées ne
     déplacent aucune case commune.
     """
-    first_cube = numbered_cube()
-    second_cube = numbered_cube()
+    first_cube = make_numbered_cube()
+    second_cube = make_numbered_cube()
 
     first_cube.move(first_face)
     first_cube.move(second_face)
@@ -394,8 +398,8 @@ def test_opposite_faces_commute(first_face, second_face):
 def test_apply_is_equivalent_to_individual_moves():
     """Vérifie si la fonction apply et une suite de
     fonction move renvoient le même cube."""
-    first_cube = numbered_cube()
-    second_cube = numbered_cube()
+    first_cube = make_numbered_cube()
+    second_cube = make_numbered_cube()
 
     first_cube.apply("U R U' U R'")
     second_cube.move("U")
@@ -409,7 +413,7 @@ def test_apply_is_equivalent_to_individual_moves():
 
 def test_apply_empty_string_does_nothing():
     """Vérifie qu'une chaîne vide ne modifie pas l'état du cube."""
-    cube = numbered_cube()
+    cube = make_numbered_cube()
     initial_state = cube.state.copy()
 
     cube.apply("")
@@ -449,8 +453,8 @@ def test_scramble_same_seed_gives_same_moves():
 
     On part du cube numéroté pour comparer l'état case par case.
     """
-    first_cube = numbered_cube()
-    second_cube = numbered_cube()
+    first_cube = make_numbered_cube()
+    second_cube = make_numbered_cube()
 
     first_moves = first_cube.scramble(30, seed=42)
     second_moves = second_cube.scramble(30, seed=42)
@@ -491,8 +495,8 @@ def test_scramble_returns_the_moves_it_played():
 
     apply attend une chaîne : on rassemble la liste avec " ".join(...).
     """
-    scrambled_cube = numbered_cube()
-    replayed_cube = numbered_cube()
+    scrambled_cube = make_numbered_cube()
+    replayed_cube = make_numbered_cube()
 
     moves_played = scrambled_cube.scramble(30, seed=7)
     replayed_cube.apply(" ".join(moves_played))
@@ -530,7 +534,7 @@ def test_scramble_then_inverse_sequence_restores_numbered_cube(seed):
     Attention : is_solved() vaut toujours False sur un cube numéroté (ses faces
     ne sont jamais unies). On compare donc à l'état de départ gardé de côté.
     """
-    cube = numbered_cube()
+    cube = make_numbered_cube()
     initial_state = cube.state.copy()
 
     moves_played = cube.scramble(50, seed=seed)
@@ -571,3 +575,139 @@ def test_inverse_of_inverse_sequence_is_original():
     twice_inverted = cube.inverse_sequence(cube.inverse_sequence(moves))
 
     assert twice_inverted == moves
+
+
+# --------------------------------------------------------------------------
+# __eq__, __repr__ et facelets
+# --------------------------------------------------------------------------
+
+
+def test_cubes_compare_with_equal_sign():
+    """Grâce à __eq__, deux cubes se comparent avec == (case par case)."""
+    first, second = Cube(), Cube()
+    assert first == second
+
+    first.move("R")
+    assert first != second
+
+    second.move("R")
+    assert first == second
+
+
+def test_cube_is_never_equal_to_something_else():
+    """Un cube n'est pas égal à un objet d'un autre type."""
+    assert Cube() != "UUUUUUUUU"
+
+
+def test_repr_can_rebuild_the_cube():
+    """repr(cube) affiche une expression qui refabrique le même cube."""
+    cube = Cube()
+    cube.apply("R U F'")
+
+    rebuilt = eval(repr(cube), {"Cube": Cube})  # eval : seulement dans un test
+
+    assert rebuilt == cube
+
+
+def test_facelets_of_new_cube():
+    """Format kociemba : 9 U, puis 9 R, 9 F, 9 D, 9 L, 9 B."""
+    assert Cube().facelets() == "".join(face * 9 for face in "URFDLB")
+
+
+def test_from_facelets_rejects_bad_strings():
+    """Une chaîne de mauvaise longueur, ou avec une lettre inconnue, est refusée."""
+    with pytest.raises(ValueError):
+        Cube.from_facelets("UUU")
+    with pytest.raises(ValueError):
+        Cube.from_facelets("X" * 54)
+
+
+# --------------------------------------------------------------------------
+# Les permutations
+# --------------------------------------------------------------------------
+
+
+def test_there_is_one_permutation_per_move():
+    """36 permutations : 18 faces, 9 tranches, 9 rotations."""
+    assert set(PERMUTATIONS) == set(ALL_MOVES)
+    assert len(ALL_MOVES) == 36
+
+
+@pytest.mark.parametrize("move", ALL_MOVES)
+def test_each_permutation_uses_every_sticker_once(move):
+    """Une permutation contient chaque numéro de 0 à 53 exactement une fois."""
+    assert sorted(PERMUTATIONS[move]) == list(range(54))
+
+
+@pytest.mark.parametrize("move", ALL_MOVES)
+def test_every_move_four_times_is_identity(numbered_cube, move):
+    """Les 36 mouvements, répétés 4 fois, ramènent au départ (même X2)."""
+    initial = numbered_cube.copy()
+
+    for _ in range(4):
+        numbered_cube.move(move)
+
+    assert numbered_cube == initial
+
+
+# --------------------------------------------------------------------------
+# Tranches et rotations
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("rotation", "equivalent"),
+    [("x", "R M' L'"), ("y", "U E' D'"), ("z", "F S B'")],
+)
+def test_rotation_is_two_faces_and_a_slice(rotation, equivalent):
+    """Tourner tout le cube = tourner ses trois couches (x = R M' L')."""
+    rotated, layered = Cube(), Cube()
+
+    rotated.move(rotation)
+    layered.apply(equivalent)
+
+    assert rotated == layered
+
+
+@pytest.mark.parametrize("move", ROTATION_MOVES)
+def test_a_rotated_cube_is_still_solved(move):
+    """Tenir le cube autrement ne le mélange pas."""
+    cube = Cube()
+
+    cube.move(move)
+
+    assert cube.is_solved()
+    assert cube != Cube()  # mais les couleurs ont changé de place
+
+
+@pytest.mark.parametrize("move", SLICE_MOVES)
+def test_slice_moves_the_centers(numbered_cube, move):
+    """Une tranche du milieu déplace 4 centres : c'est pour ça qu'elle ne fait
+    pas partie des 18 actions du RL (le cube changerait d'orientation)."""
+    centers = numbered_cube.state[:, 1, 1].copy()
+
+    numbered_cube.move(move)
+
+    assert (numbered_cube.state[:, 1, 1] != centers).sum() == 4
+
+
+# --------------------------------------------------------------------------
+# L'ordre d'une séquence
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("sequence", "order"),
+    [("R", 4), ("R2", 2), ("R U", 105), ("R U'", 63), ("R U R' U'", 6), ("", 1)],
+)
+def test_sequence_order(sequence, order):
+    """Combien de répétitions pour revenir au départ ? « R U » : 105 fois."""
+    assert sequence_order(sequence) == order
+
+
+def test_sequence_order_really_comes_back():
+    """Vérification directe : R U joué 105 fois revient au cube neuf, pas avant."""
+    cube = Cube()
+    for repetition in range(1, 106):
+        cube.apply("R U")
+        assert cube.is_solved() == (repetition == 105)

@@ -7,12 +7,14 @@ du clavier sont testées dans test_game.py.
 
 import pygame
 import pytest
-
+from rubiks.game import LONG_SCRAMBLE_LENGTH
 from rubiks.render.view2d import (
     COLORS,
     HELP_LINES,
+    HELP_TEXT_SIZE,
     MARGIN,
     MOVES_PER_LINE,
+    SCRAMBLE_LINES,
     STICKER_SIZE,
     TEXT_SIZE,
     WINDOW_HEIGHT,
@@ -20,6 +22,7 @@ from rubiks.render.view2d import (
     scramble_lines,
     sticker_position,
 )
+from rubiks.scramble import random_moves
 
 # Les faces, avec les numéros de cube.py
 U, R, F, D, L, B = range(6)
@@ -101,7 +104,7 @@ def test_long_scramble_is_split_without_losing_moves():
 
     lines = scramble_lines(moves)
 
-    assert len(lines) == 3  # 12 + 12 + 6 coups
+    assert len(lines) == 3  # 13 + 13 + 4 coups
     all_moves = " ".join(lines).removeprefix("Mélange : ").split()
     assert all_moves == moves
     assert all(len(line.split()) <= MOVES_PER_LINE + 2 for line in lines)
@@ -114,8 +117,22 @@ def test_help_lines_fit_in_the_window(line):
     pygame.font mesure un texte sans ouvrir de fenêtre.
     """
     pygame.font.init()
-    font = pygame.font.Font(None, TEXT_SIZE)
+    font = pygame.font.Font(None, HELP_TEXT_SIZE)
 
     width, _ = font.size(line)
 
     assert MARGIN + width <= WINDOW_WIDTH - MARGIN
+
+
+def test_long_scramble_fits_in_the_text_area():
+    """Le plus long mélange tient dans les lignes réservées, sans déborder."""
+    pygame.font.init()
+    font = pygame.font.Font(None, TEXT_SIZE)
+    worst = ["B2"] * LONG_SCRAMBLE_LENGTH  # deux caractères : les coups les plus larges
+    lines = scramble_lines(worst) + scramble_lines(
+        random_moves(LONG_SCRAMBLE_LENGTH, seed=0)
+    )
+
+    assert len(scramble_lines(worst)) <= SCRAMBLE_LINES
+    for line in lines:
+        assert MARGIN + font.size(line)[0] <= WINDOW_WIDTH - MARGIN

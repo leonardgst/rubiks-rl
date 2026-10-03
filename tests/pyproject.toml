@@ -1,6 +1,6 @@
 [project]
 name = "rubiks"
-version = "1.0.0"
+version = "0.2.0"
 description = "Rubik's Cube 3x3 jouable en 3D, résolu par un agent de reinforcement learning"
 readme = "README.md"
 authors = [
@@ -10,7 +10,6 @@ requires-python = ">=3.12"
 dependencies = [
     "numpy>=2.5.3",
     "pygame>=2.6.1",
-    "ursina>=8.3.0",
 ]
 
 [project.scripts]
