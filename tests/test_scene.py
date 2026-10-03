@@ -2,7 +2,6 @@
 
 import numpy as np
 import pytest
-
 from rubiks.cube import Cube
 from rubiks.geometry import STICKERS, best_direction, move_for_drag, sticker_location
 from rubiks.render.scene import (

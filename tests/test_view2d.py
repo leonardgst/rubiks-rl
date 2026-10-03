@@ -7,7 +7,6 @@ du clavier sont testées dans test_game.py.
 
 import pygame
 import pytest
-
 from rubiks.game import LONG_SCRAMBLE_LENGTH
 from rubiks.render.view2d import (
     COLORS,

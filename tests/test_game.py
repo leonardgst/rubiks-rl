@@ -2,7 +2,6 @@
 
 import numpy as np
 import pytest
-
 from rubiks.cube import MOVES, Cube
 from rubiks.game import (
     LONG_SCRAMBLE_LENGTH,

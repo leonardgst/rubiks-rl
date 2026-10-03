@@ -1,7 +1,6 @@
 """Tests de la notation des mouvements (rubiks.moves) : que des chaînes."""
 
 import pytest
-
 from rubiks.moves import (
     ALL_MOVES,
     MOVES,

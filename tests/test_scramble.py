@@ -1,7 +1,6 @@
 """Tests des mélanges aléatoires (rubiks.scramble)."""
 
 import pytest
-
 from rubiks.moves import MOVES
 from rubiks.scramble import random_moves
 

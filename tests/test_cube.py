@@ -12,7 +12,6 @@ Le cube numéroté existe en deux versions : la fixture ``numbered_cube``
 
 import numpy as np
 import pytest
-
 from rubiks.cube import MOVES, PERMUTATIONS, Cube, sequence_order
 from rubiks.moves import ALL_MOVES, ROTATION_MOVES, SLICE_MOVES
 
