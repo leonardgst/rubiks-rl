@@ -1,0 +1,19 @@
+#Environnement virtuel donc reconstructible avec uv sync
+.venv/
+
+#Fichiers compilés que python crée tout seul
+__pycache__/
+
+#Cache de pytest
+.pytest_cache/
+
+#Cache de ruff
+.ruff_cache/
+
+#Les futurs modèles de RL entrainés (gros fichiers)
+models/
+
+#Captures d'écran faites avec F12 (les images du README sont dans docs/images/)
+capture-*.png
+
+.DS_Store

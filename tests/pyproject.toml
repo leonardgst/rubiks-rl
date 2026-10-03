@@ -1,0 +1,40 @@
+[project]
+name = "rubiks"
+version = "0.2.0"
+description = "Rubik's Cube 3x3 jouable en 3D, résolu par un agent de reinforcement learning"
+readme = "README.md"
+authors = [
+    { name = "leonardgst", email = "goussetleonard@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.5.3",
+    "pygame>=2.6.1",
+]
+
+[project.scripts]
+rubiks = "rubiks:main"                      # le jeu en 3D (ursina)
+rubiks-2d = "rubiks:main_2d"                # le patron en 2D (pygame)
+rubiks-3d-pygame = "rubiks:main_3d_pygame"  # la 3D « à la main » (pygame)
+rubiks-terminal = "rubiks:main_terminal"    # le cube dans le terminal
+
+[build-system]
+requires = ["uv_build>=0.11.29,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.9",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]          # pytest cherche les tests uniquement dans tests/
+
+[tool.ruff]
+extend-exclude = ["docs"]      # les exemples des fiches restent tels qu'ils sont écrits
+
+[tool.ruff.lint]
+# E : style, F : erreurs probables, I : ordre des imports,
+# B : pièges fréquents (bugbear), UP : syntaxe Python moderne (pyupgrade)
+select = ["E", "F", "I", "B", "UP"]
