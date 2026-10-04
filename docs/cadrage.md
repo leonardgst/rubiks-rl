@@ -187,7 +187,7 @@ Chaque phase = une branche Git principale (voire plusieurs sous-branches) + une 
 - **Objectif :** comprendre le RL et transformer le cube en « terrain de jeu » pour un agent.
 - **Cours (dans `docs/cours/`) :** agent, environnement, état, action, récompense, épisode, politique, fonction de valeur, exploration vs exploitation, équation de Bellman — toujours avec le cube comme exemple.
 - **Pourquoi c'est dur :** le cube a environ 43 × 10¹⁸ états possibles, et au hasard on ne tombe quasiment jamais sur l'état résolu → la récompense est **extrêmement rare**.
-- **Livrables :** `gymnasium` et `torch` ajoutés au projet avec `uv add` (version CPU ou GPU : voir section 9) ; `RubiksEnv` (gymnasium) avec `reset(scramble_depth)`, `step(action)`, récompense, fin d'épisode.
+- **Livrables :** `gymnasium` (ajouter `torch` en phase 5) ajouté au projet avec `uv add` (Pour `torch`, version CPU ou GPU : voir section 9) ; `RubiksEnv` (gymnasium) avec `reset(scramble_depth)`, `step(action)`, récompense, fin d'épisode.
 - **Terminé quand :** un agent aléatoire tourne dans l'environnement et je comprends pourquoi il n'y arrive pas.
 
 ### Phase 5 — Premier agent : résoudre des cubes peu mélangés
@@ -294,8 +294,9 @@ Les notions Git sont introduites progressivement : les bases en phase 0, les bra
 |---|---|---|
 | Bibliothèque 3D - Décidé : `ursina` | 2026-10-02 | `ursina` (simple) ou `pygame` + `PyOpenGL` (formateur mais exigeant). Bonus : une 3D « à la main » en `pygame` seul |
 | Affichage 2D - Décidé: `pygame` | 2026-10-02 | Terminal coloré ou fenêtre `pygame` |
-| Représentation de l'état pour le RL | Phase 4 | 54 cases colorées (simple, déjà rapide : un mouvement = une permutation numpy, `cube.PERMUTATIONS`) ou positions/orientations des cubies (compact) |
-| Version de PyTorch (CPU ou GPU) | Début phase 4 | Version par défaut de PyPI, ou index PyTorch dédié (CPU seul, CUDA…) déclaré dans `pyproject.toml` — voir `docs/cours/uv.md` |
+| Représentation de l'état pour le RL - Décidé: 54 cases | Phase 4 | 54 cases colorées (simple, déjà rapide : un mouvement = une permutation numpy, `cube.PERMUTATIONS`) ou positions/orientations des cubies (compact) |
+| Récompenses - Décidé: -1 par coup, γ = 1 | Début de la phase 4 | |
+| Version de PyTorch (CPU ou GPU) | Début phase 5 | Version par défaut de PyPI, ou index PyTorch dédié (CPU seul, CUDA…) déclaré dans `pyproject.toml` — voir `docs/cours/uv.md` |
 | Métrique de coups | Phase 7 | Demi-tour compte pour 1 coup (HTM) ou 2 (QTM) |
 | Matériel d'entraînement | Phase 6 | CPU local, GPU local, ou Google Colab |
 
