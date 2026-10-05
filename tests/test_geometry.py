@@ -7,6 +7,7 @@ exactement ce que fait une vraie rotation dans l'espace.
 
 import numpy as np
 import pytest
+
 from rubiks.cube import PERMUTATIONS, Cube
 from rubiks.geometry import (
     CUBIES,

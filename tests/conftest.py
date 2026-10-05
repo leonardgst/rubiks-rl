@@ -7,6 +7,7 @@ pytest trouve ce fichier tout seul (il s'appelle forcément ``conftest.py``).
 
 import numpy as np
 import pytest
+
 from rubiks.cube import Cube
 
 
